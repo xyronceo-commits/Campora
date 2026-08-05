@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "universityId": { "type": "string" },
+        "universityName": { "type": "string" },
+        "avatar": { "type": "string" },
+        "phone": { "type": "string" },
+        "isVerifiedAgent": { "type": "boolean" },
+        "verificationStatus": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "email", "name", "role"]
+    },
+    "listings": {
+      "title": "Listing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "universityId": { "type": "string" },
+        "universityName": { "type": "string" },
+        "campus": { "type": "string" },
+        "address": { "type": "string" },
+        "type": { "type": "string" },
+        "price": { "type": "number" },
+        "currency": { "type": "string" },
+        "pricePeriod": { "type": "string" },
+        "totalRooms": { "type": "number" },
+        "availableRooms": { "type": "number" },
+        "gender": { "type": "string" },
+        "distanceToCampusMinutes": { "type": "number" },
+        "distanceToCampusKm": { "type": "number" },
+        "description": { "type": "string" },
+        "facilities": { "type": "array" },
+        "images": { "type": "array" },
+        "agentId": { "type": "string" },
+        "agentName": { "type": "string" },
+        "agentPhone": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "universityId", "price", "agentId"]
+    },
+    "inspections": {
+      "title": "InspectionBooking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "listingId": { "type": "string" },
+        "listingTitle": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "agentId": { "type": "string" },
+        "date": { "type": "string" },
+        "timeSlot": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "listingId", "studentId", "agentId", "date", "timeSlot"]
+    },
+    "notifications": {
+      "title": "NotificationItem",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "read": { "type": "boolean" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "userId", "title", "body"]
+    }
+  }
+}
