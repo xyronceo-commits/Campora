@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { ArrowUpRight } from 'lucide-react';
+import { CamporaLogo } from './CamporaLogo';
 
 export const Footer: React.FC = () => {
   const { 
@@ -29,12 +30,9 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-2 space-y-4">
             <div 
               onClick={() => setActiveView('home')} 
-              className="flex items-center gap-2.5 cursor-pointer"
+              className="cursor-pointer inline-block"
             >
-              <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center shrink-0">
-                <div className="w-3.5 h-3.5 bg-emerald-500 rounded-sm rotate-45" />
-              </div>
-              <span className="text-xl font-black text-white tracking-tight uppercase">CAMPORA</span>
+              <CamporaLogo size="md" textColor="text-white" pinColor="#10b981" />
             </div>
             <p className="text-xs text-neutral-400 leading-relaxed max-w-sm font-normal">
               Africa's premier student accommodation platform. Connecting university students with verified agents for hostels, self-contain apartments, and lodges near major African campuses.

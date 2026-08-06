@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { UserRole } from '../types';
 import { NotificationCenter } from './NotificationCenter';
+import { CamporaLogo } from './CamporaLogo';
 import { 
   Building2, GraduationCap, Search, Bookmark, Bell, Sun, Moon, User as UserIcon, 
   ChevronDown, ShieldCheck, FileText, LogOut, Sparkles, Menu, X, Check,
@@ -63,19 +64,9 @@ export const Header: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <button
             onClick={() => setActiveView('home')}
-            className="flex items-center gap-2.5 focus:outline-none group text-left"
+            className="focus:outline-none group text-left"
           >
-            <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center shadow-sm shrink-0 group-hover:bg-neutral-800 transition-colors">
-              <div className="w-3.5 h-3.5 bg-emerald-500 rounded-sm rotate-45" />
-            </div>
-            <div>
-              <span className="text-xl font-black tracking-tight text-black dark:text-white flex items-center gap-1 uppercase">
-                CAMPORA
-              </span>
-              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest -mt-1">
-                Student Housing
-              </span>
-            </div>
+            <CamporaLogo size="md" />
           </button>
         </div>
       </header>
@@ -90,19 +81,9 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => setActiveView('home')}
-            className="flex items-center gap-2.5 focus:outline-none group text-left"
+            className="focus:outline-none group text-left"
           >
-            <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center shadow-sm shrink-0 group-hover:bg-neutral-800 transition-colors">
-              <div className="w-3.5 h-3.5 bg-emerald-500 rounded-sm rotate-45" />
-            </div>
-            <div>
-              <span className="text-xl font-black tracking-tight text-black dark:text-white flex items-center gap-1 uppercase">
-                CAMPORA
-              </span>
-              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest -mt-1">
-                Student Housing
-              </span>
-            </div>
+            <CamporaLogo size="md" />
           </button>
 
           {/* University Picker Dropdown */}

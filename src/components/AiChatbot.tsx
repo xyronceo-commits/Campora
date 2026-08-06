@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { chatWithCamporaBot } from '../lib/gemini';
-import { Bot, Sparkles, X, Send, User, ChevronDown, ShieldCheck, HelpCircle } from 'lucide-react';
+import { 
+  Bot, Sparkles, X, Send, User, ChevronDown, ShieldCheck, HelpCircle, 
+  Code, Copy, Check, Terminal, CheckCircle2, Info, List, FileText 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ChatMessage {
@@ -10,8 +13,68 @@ interface ChatMessage {
   timestamp: string;
 }
 
-// Component to render chat text and automatically convert any raw Markdown table syntax or HTML table tags into clean HTML <table> elements
+// Inline Formatter for **bold**, *italics*, and `inline code`
+const FormatInlineText: React.FC<{ text: string }> = ({ text }) => {
+  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_)/g);
+
+  return (
+    <>
+      {parts.map((part, idx) => {
+        if (!part) return null;
+        if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+          return (
+            <code key={idx} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-mono text-[11px] border border-slate-200 dark:border-slate-700">
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
+        if ((part.startsWith('**') && part.endsWith('**')) || (part.startsWith('__') && part.endsWith('__'))) {
+          return <strong key={idx} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
+        }
+        if ((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) {
+          return <em key={idx} className="italic text-slate-800 dark:text-slate-200">{part.slice(1, -1)}</em>;
+        }
+        return <span key={idx}>{part}</span>;
+      })}
+    </>
+  );
+};
+
+// Code Block Component with Copy feature & Dark Theme
+const CodeBlock: React.FC<{ code: string; language?: string }> = ({ code, language = 'code' }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="my-2.5 rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-sm text-left">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800 text-[10px] text-slate-400 font-mono">
+        <div className="flex items-center gap-1.5">
+          <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="uppercase font-bold tracking-wider">{language || 'CODE'}</span>
+        </div>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 hover:text-white transition-colors px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700"
+        >
+          {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+          <span>{copied ? 'Copied' : 'Copy'}</span>
+        </button>
+      </div>
+      <pre className="p-3 text-[11px] font-mono text-emerald-300 overflow-x-auto whitespace-pre leading-relaxed">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+};
+
+// Component to render chat text and automatically convert Markdown, Code, Tables, Lists into clean UI components
 const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
+
   const parseHtmlTableString = (htmlText: string) => {
     try {
       const parser = new DOMParser();
@@ -43,9 +106,37 @@ const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
     }
   };
 
-  const parseBlocks = (input: string) => {
-    if (input.includes('<table') && input.includes('</table>')) {
-      const parts = input.split(/(<table[\s\S]*?<\/table>)/i);
+  // Step 1: Parse code blocks
+  const parseCodeBlocks = (input: string) => {
+    const codeBlockRegex = /```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```/g;
+    const segments: { type: 'code' | 'text'; language?: string; content: string }[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = codeBlockRegex.exec(input)) !== null) {
+      if (match.index > lastIndex) {
+        segments.push({ type: 'text', content: input.slice(lastIndex, match.index) });
+      }
+      segments.push({
+        type: 'code',
+        language: match[1] || 'code',
+        content: match[2].trim()
+      });
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < input.length) {
+      segments.push({ type: 'text', content: input.slice(lastIndex) });
+    }
+
+    return segments;
+  };
+
+  // Step 2: Parse text segment into lines (headings, lists, blockquotes, tables, paragraphs)
+  const parseTextSegment = (inputText: string) => {
+    // Check if HTML table exists
+    if (inputText.includes('<table') && inputText.includes('</table>')) {
+      const parts = inputText.split(/(<table[\s\S]*?<\/table>)/i);
       return parts.map((part) => {
         if (part.toLowerCase().includes('<table')) {
           const parsed = parseHtmlTableString(part);
@@ -53,23 +144,43 @@ const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
             return { type: 'parsedTable' as const, content: parsed };
           }
         }
-        return { type: 'rawText' as const, content: part };
+        return { type: 'lines' as const, content: part };
       });
     }
 
-    const lines = input.split('\n');
-    const blocks: { type: 'text' | 'parsedTable'; content: string | { headers: string[]; rows: string[][] } }[] = [];
-    let currentTableLines: string[] = [];
-    let currentTextLines: string[] = [];
+    return [{ type: 'lines' as const, content: inputText }];
+  };
 
-    const flushText = () => {
-      if (currentTextLines.length > 0) {
-        blocks.push({ type: 'text', content: currentTextLines.join('\n') });
-        currentTextLines = [];
+  const renderLinesBlock = (rawLinesText: string, keyPrefix: string) => {
+    const lines = rawLinesText.split('\n');
+    const elements: React.ReactNode[] = [];
+    let currentList: { isNumbered: boolean; items: string[] } | null = null;
+    let currentTableLines: string[] = [];
+
+    const flushList = (key: string) => {
+      if (currentList && currentList.items.length > 0) {
+        const isNum = currentList.isNumbered;
+        elements.push(
+          <ul key={key} className="my-2 space-y-1.5 pl-1">
+            {currentList.items.map((item, iIdx) => (
+              <li key={iIdx} className="flex items-start gap-2 text-xs leading-relaxed">
+                {isNum ? (
+                  <span className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    {iIdx + 1}
+                  </span>
+                ) : (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                )}
+                <span><FormatInlineText text={item} /></span>
+              </li>
+            ))}
+          </ul>
+        );
+        currentList = null;
       }
     };
 
-    const flushTable = () => {
+    const flushTable = (key: string) => {
       if (currentTableLines.length > 0) {
         const tableRows = currentTableLines
           .map(l => l.trim())
@@ -85,57 +196,15 @@ const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
         if (tableRows.length > 0) {
           const headers = tableRows[0];
           const rows = tableRows.slice(1);
-          blocks.push({ type: 'parsedTable', content: { headers, rows } });
-        } else {
-          currentTextLines.push(...currentTableLines);
-        }
-        currentTableLines = [];
-      }
-    };
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      const isTableLine = trimmed.includes('|') && (trimmed.startsWith('|') || trimmed.endsWith('|'));
-      if (isTableLine) {
-        flushText();
-        currentTableLines.push(trimmed);
-      } else {
-        flushTable();
-        currentTextLines.push(line);
-      }
-    }
-    flushText();
-    flushTable();
-
-    return blocks;
-  };
-
-  const blocks = parseBlocks(text);
-
-  return (
-    <div className="space-y-2">
-      {blocks.map((block, idx) => {
-        if (block.type === 'text' || block.type === 'rawText') {
-          const strContent = block.content as string;
-          if (!strContent.trim()) return null;
-          return (
-            <p key={idx} className="whitespace-pre-wrap leading-relaxed">
-              {strContent}
-            </p>
-          );
-        }
-
-        if (block.type === 'parsedTable') {
-          const { headers, rows } = block.content as { headers: string[]; rows: string[][] };
-          return (
-            <div key={idx} className="my-2.5 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shadow-sm p-0.5">
+          elements.push(
+            <div key={key} className="my-2.5 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shadow-sm p-0.5">
               <table className="w-full text-left text-[11px] border-collapse min-w-[260px]">
                 {headers.length > 0 && (
                   <thead>
                     <tr className="bg-emerald-100/70 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-emerald-950 dark:text-emerald-300">
                       {headers.map((h, hIdx) => (
                         <th key={hIdx} className="px-3 py-2 font-bold tracking-wide">
-                          {h}
+                          <FormatInlineText text={h} />
                         </th>
                       ))}
                     </tr>
@@ -149,7 +218,7 @@ const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
                     >
                       {row.map((cell, cIdx) => (
                         <td key={cIdx} className="px-3 py-2 leading-tight">
-                          {cell}
+                          <FormatInlineText text={cell} />
                         </td>
                       ))}
                     </tr>
@@ -159,8 +228,139 @@ const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
             </div>
           );
         }
+        currentTableLines = [];
+      }
+    };
 
-        return null;
+    lines.forEach((line, idx) => {
+      const trimmed = line.trim();
+      const lineKey = `${keyPrefix}_${idx}`;
+
+      // Check table row
+      if (trimmed.includes('|') && (trimmed.startsWith('|') || trimmed.endsWith('|'))) {
+        flushList(`${lineKey}_fl`);
+        currentTableLines.push(trimmed);
+        return;
+      } else {
+        flushTable(`${lineKey}_ft`);
+      }
+
+      // Headings (#, ##, ###)
+      if (trimmed.startsWith('#')) {
+        flushList(`${lineKey}_fl`);
+        const headingText = trimmed.replace(/^#+\s*/, '');
+        elements.push(
+          <h4 key={lineKey} className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white mt-2 mb-1 border-b border-slate-200 dark:border-slate-700 pb-1">
+            <FormatInlineText text={headingText} />
+          </h4>
+        );
+        return;
+      }
+
+      // Blockquotes / Callout (> )
+      if (trimmed.startsWith('>')) {
+        flushList(`${lineKey}_fl`);
+        const quoteText = trimmed.replace(/^>\s*/, '');
+        elements.push(
+          <div key={lineKey} className="my-2 p-2.5 rounded-r-xl border-l-4 border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-200 text-xs flex items-start gap-2">
+            <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <div className="leading-relaxed"><FormatInlineText text={quoteText} /></div>
+          </div>
+        );
+        return;
+      }
+
+      // Bulleted List (- or *)
+      const bulletMatch = trimmed.match(/^[-*]\s+(.*)/);
+      if (bulletMatch) {
+        if (!currentList || currentList.isNumbered) {
+          flushList(`${lineKey}_fl`);
+          currentList = { isNumbered: false, items: [] };
+        }
+        currentList.items.push(bulletMatch[1]);
+        return;
+      }
+
+      // Numbered List (1. or 1))
+      const numberedMatch = trimmed.match(/^\d+[\.\)]\s+(.*)/);
+      if (numberedMatch) {
+        if (!currentList || !currentList.isNumbered) {
+          flushList(`${lineKey}_fl`);
+          currentList = { isNumbered: true, items: [] };
+        }
+        currentList.items.push(numberedMatch[1]);
+        return;
+      }
+
+      // Regular paragraph
+      flushList(`${lineKey}_fl`);
+      if (trimmed) {
+        elements.push(
+          <p key={lineKey} className="leading-relaxed">
+            <FormatInlineText text={trimmed} />
+          </p>
+        );
+      }
+    });
+
+    flushList(`${keyPrefix}_final_fl`);
+    flushTable(`${keyPrefix}_final_ft`);
+
+    return elements;
+  };
+
+  const segments = parseCodeBlocks(text);
+
+  return (
+    <div className="space-y-1.5 text-left">
+      {segments.map((seg, idx) => {
+        if (seg.type === 'code') {
+          return <CodeBlock key={idx} code={seg.content} language={seg.language} />;
+        }
+
+        const subBlocks = parseTextSegment(seg.content);
+        return (
+          <React.Fragment key={idx}>
+            {subBlocks.map((sb, sbIdx) => {
+              if (sb.type === 'parsedTable') {
+                const { headers, rows } = sb.content;
+                return (
+                  <div key={sbIdx} className="my-2.5 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shadow-sm p-0.5">
+                    <table className="w-full text-left text-[11px] border-collapse min-w-[260px]">
+                      {headers.length > 0 && (
+                        <thead>
+                          <tr className="bg-emerald-100/70 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-emerald-950 dark:text-emerald-300">
+                            {headers.map((h, hIdx) => (
+                              <th key={hIdx} className="px-3 py-2 font-bold tracking-wide">
+                                <FormatInlineText text={h} />
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                      )}
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700/60 text-slate-700 dark:text-slate-200">
+                        {rows.map((row, rIdx) => (
+                          <tr 
+                            key={rIdx} 
+                            className={rIdx % 2 === 0 ? 'bg-white dark:bg-slate-900/60' : 'bg-slate-50/60 dark:bg-slate-800/40'}
+                          >
+                            {row.map((cell, cIdx) => (
+                              <td key={cIdx} className="px-3 py-2 leading-tight">
+                                <FormatInlineText text={cell} />
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              }
+
+              return renderLinesBlock(sb.content as string, `seg_${idx}_sb_${sbIdx}`);
+            })}
+          </React.Fragment>
+        );
       })}
     </div>
   );
