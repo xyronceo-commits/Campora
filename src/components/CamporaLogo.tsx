@@ -49,7 +49,7 @@ export const CamporaLogo: React.FC<CamporaLogoProps> = ({
       {/* Location Pin Logo Icon */}
       <div className={`${iconSizes[size]} shrink-0 transition-transform group-hover:scale-105`}>
         <svg
-          viewBox="0 0 500 560"
+          viewBox="50 10 400 500"
           className="w-full h-full drop-shadow-sm"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
