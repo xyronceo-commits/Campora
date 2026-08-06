@@ -35,10 +35,8 @@ async function startServer() {
       agentName: 'Sipho Dlamini (Cape Student Residence)',
       agentEmail: 'sipho.properties@campora.africa',
       businessName: 'Cape Student Residence Ltd',
-      idType: 'national_id',
-      idNumber: 'SA-920112001',
-      idDocumentUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
-      proofOfOwnershipUrl: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80',
+      proofType: 'cac',
+      proofUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
       status: 'pending',
       submittedAt: '2026-07-28T10:00:00Z',
     }
@@ -395,10 +393,9 @@ async function startServer() {
       agentName: req.body.agentName || "Agent",
       agentEmail: req.body.agentEmail || "agent@campora.africa",
       businessName: req.body.businessName || "Property Agent",
-      idType: req.body.idType || "national_id",
-      idNumber: req.body.idNumber || "ID-12345",
-      idDocumentUrl: req.body.idDocumentUrl || "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
-      proofOfOwnershipUrl: req.body.proofOfOwnershipUrl || "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80",
+      proofType: req.body.proofType || "banner",
+      proofUrl: req.body.proofUrl || "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
+      officeAddress: req.body.officeAddress,
       status: "pending",
       submittedAt: new Date().toISOString()
     };
@@ -863,9 +860,8 @@ Office Address: ${officeAddress || "Not provided"}`;
         const response = await ai.models.generateContent({
           model: "gemini-3.6-flash",
           contents: `Business Name: ${businessName}
-ID Type: ${idType}
-ID Number: ${idNumber}
-Office Address: ${officeAddress}`,
+Proof of Business Type: ${proofType || 'banner / logo / office photo'}
+Office Address: ${officeAddress || 'Not provided'}`,
           config: {
             systemInstruction,
             responseMimeType: "application/json",
