@@ -812,13 +812,14 @@ ${JSON.stringify(existingData, null, 2)}`,
   // 5. AI Business & Agent Verification Assistant
   app.post("/api/gemini/verify-business", async (req, res) => {
     try {
-      const { businessName, idType, idNumber, officeAddress } = req.body;
+      const { businessName, proofType, officeAddress } = req.body;
 
       const systemInstruction = `You are Campora's automated AI Business Verification Officer for African student housing.
-Evaluate the business credentials provided by an agent/landlord.
+Evaluate the agency business details provided by a property manager/agent.
 Checks to perform:
-- Format validity for selected ID type (${idType.toUpperCase()}: CAC Registration, NIN National Identity, Voter Card, Driver's License, International Passport)
-- Credibility of Business Name and physical Office Address
+- Credibility and appropriateness of Business / Agency Name (${businessName})
+- Proof of business type provided (${proofType || 'banner / logo / office photo'})
+- Credibility of physical Office Address (${officeAddress || 'Not provided'})
 - Risk score assessment (0 to 100, where 0 is safest)
 
 Respond in strict JSON with schema:
@@ -834,8 +835,7 @@ Respond in strict JSON with schema:
       if (llmKey) {
         const verifyModel = process.env.LLM_CHAT_MODEL || "qwen/qwen3.6-27b";
         const promptContent = `Business Name: ${businessName}
-ID Type: ${idType}
-ID Number: ${idNumber}
+Proof of Business Type: ${proofType || "Banner / Logo / Office Photo"}
 Office Address: ${officeAddress || "Not provided"}`;
 
         const responseText = await callCustomLlmApi({

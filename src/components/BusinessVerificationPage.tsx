@@ -11,8 +11,7 @@ export const BusinessVerificationPage: React.FC = () => {
   const { user, updateProfile, addToast, setActiveView } = useAuth();
 
   const [businessName, setBusinessName] = useState('');
-  const [idType, setIdType] = useState<'cac' | 'nin' | 'voter' | 'driver' | 'passport'>('cac');
-  const [idNumber, setIdNumber] = useState('');
+  const [proofType, setProofType] = useState<'banner' | 'logo' | 'office_photo' | 'cac' | 'other'>('banner');
   const [officeAddress, setOfficeAddress] = useState('');
   const [uploadedDocName, setUploadedDocName] = useState<string | null>(null);
   const [docFile, setDocFile] = useState<File | null>(null);
@@ -25,15 +24,15 @@ export const BusinessVerificationPage: React.FC = () => {
       const file = e.target.files[0];
       setDocFile(file);
       setUploadedDocName(file.name);
-      addToast('Document Selected', `${file.name} ready for submission`, 'info');
+      addToast('Proof Selected', `${file.name} ready for submission`, 'info');
     }
   };
 
   const handleSubmitVerification = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!businessName.trim() || !idNumber.trim()) {
-      addToast('Missing Fields', 'Please fill in your Business Name and ID Number.', 'warning');
+    if (!businessName.trim()) {
+      addToast('Missing Business Name', 'Please enter your Agency or Business Name.', 'warning');
       return;
     }
 
@@ -42,20 +41,20 @@ export const BusinessVerificationPage: React.FC = () => {
 
     try {
       if (docFile && user) {
-        addToast('Uploading Document...', 'Saving verification document to Firebase Storage', 'info');
+        addToast('Uploading Proof...', 'Saving proof of business to storage', 'info');
         const path = `verifications/${user.id}_${Date.now()}_${docFile.name}`;
         documentUrl = await uploadFileToFirebaseStorage(path, docFile);
       }
 
-      addToast('AI Verifying Credentials...', 'Running automated verification check on business ID and address', 'info');
+      addToast('AI Validating Business Details...', 'Reviewing business name & proof of business', 'info');
 
       // Call AI Verification backend endpoint
-      let aiResultReason = 'Verified by AI Credential Engine';
+      let aiResultReason = 'Verified Agency & Business Profile';
       try {
         const aiRes = await fetch('/api/gemini/verify-business', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessName, idType, idNumber, officeAddress }),
+          body: JSON.stringify({ businessName, proofType, officeAddress }),
         });
         if (aiRes.ok) {
           const aiData = await aiRes.json();
@@ -71,14 +70,14 @@ export const BusinessVerificationPage: React.FC = () => {
         isVerifiedAgent: true,
         verificationStatus: 'verified',
         businessName,
-        idType,
-        idNumber,
+        proofType,
+        proofUrl: documentUrl || uploadedDocName || undefined,
         officeAddress,
       });
 
       setIsSubmitted(true);
       addToast(
-        'Agent Verified by AI! 🎉', 
+        'Agent Business Registered! 🎉', 
         `${aiResultReason}`, 
         'success'
       );
@@ -88,9 +87,12 @@ export const BusinessVerificationPage: React.FC = () => {
       updateProfile({
         isVerifiedAgent: true,
         verificationStatus: 'verified',
+        businessName,
+        proofType,
+        officeAddress
       });
       setIsSubmitted(true);
-      addToast('Verification Saved', 'Agent status updated.', 'success');
+      addToast('Verification Saved', 'Agent business status updated.', 'success');
     } finally {
       setUploading(false);
     }
@@ -107,12 +109,12 @@ export const BusinessVerificationPage: React.FC = () => {
               2
             </span>
             <div>
-              <p className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-300 tracking-wider">Step 2 of 2: Mandatory Agent Business Verification</p>
-              <p className="text-[11px] text-emerald-800 dark:text-emerald-400 font-medium">Verification is required for all agents before listing accommodations on Campora</p>
+              <p className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-300 tracking-wider">Step 2 of 2: Agency & Business Verification</p>
+              <p className="text-[11px] text-emerald-800 dark:text-emerald-400 font-medium">Provide your agency name & proof of business (banner, logo, office photo, or CAC)</p>
             </div>
           </div>
-          <span className="text-[11px] font-extrabold uppercase bg-rose-500/10 text-rose-600 dark:text-rose-400 px-3 py-1 rounded-lg border border-rose-200 dark:border-rose-900">
-            Mandatory Step
+          <span className="text-[11px] font-extrabold uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-900">
+            Onboarding Verification
           </span>
         </div>
 
@@ -125,11 +127,11 @@ export const BusinessVerificationPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
-                  Business & CAC Verification
+                  Agency & Business Verification
                 </h1>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Provide your agency registration or government ID to build trust with student tenants.
+                Register your business name and upload proof of business to earn your verified agent badge.
               </p>
             </div>
 
@@ -150,10 +152,10 @@ export const BusinessVerificationPage: React.FC = () => {
 
               <div className="space-y-2">
                 <h3 className="text-xl font-black text-emerald-950 dark:text-emerald-100">
-                  Business Verification Received!
+                  Business Details Saved!
                 </h3>
                 <p className="text-xs text-emerald-800 dark:text-emerald-300 max-w-md mx-auto">
-                  Your details have been registered under your agent profile. You can now post accommodations and manage student viewing requests.
+                  Your business profile <strong className="font-bold">{businessName}</strong> has been registered. You can now post student hostel accommodations and manage viewing appointments.
                 </p>
               </div>
 
@@ -181,7 +183,7 @@ export const BusinessVerificationPage: React.FC = () => {
               {/* Business Name */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                  Agency or Hostel Business Name <span className="text-rose-500">*</span>
+                  Agency or Business Name <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -190,50 +192,34 @@ export const BusinessVerificationPage: React.FC = () => {
                     required
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="e.g. Prime Student Residences Ltd / Chidi Properties"
+                    placeholder="e.g. Prime Student Residences / Chidi Properties & Hostels"
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
               </div>
 
-              {/* ID Type & Number */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                    Verification Document Type
-                  </label>
-                  <select
-                    value={idType}
-                    onChange={(e) => setIdType(e.target.value as any)}
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-bold focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="cac">CAC Business Certificate (RC / BN)</option>
-                    <option value="nin">National Identity Number (NIN)</option>
-                    <option value="voter">INEC Voter's Card</option>
-                    <option value="driver">Driver's License</option>
-                    <option value="passport">International Passport</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                    {idType === 'cac' ? 'CAC Registration Number' : 'ID Document Number'} <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={idNumber}
-                    onChange={(e) => setIdNumber(e.target.value)}
-                    placeholder={idType === 'cac' ? 'RC-8492019' : 'NIN-91028471829'}
-                    className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
+              {/* Proof Type Dropdown */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                  Type of Business Proof You wish to Upload
+                </label>
+                <select
+                  value={proofType}
+                  onChange={(e) => setProofType(e.target.value as any)}
+                  className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-bold focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="banner">Business Banner / Office Signpost Photo</option>
+                  <option value="logo">Agency Logo / Business Brand Image</option>
+                  <option value="office_photo">Physical Office Frontage / Workspace Photo</option>
+                  <option value="cac">CAC / Business Registration Document (Optional)</option>
+                  <option value="other">Other Business Proof</option>
+                </select>
               </div>
 
               {/* Office Location */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                  Physical Office Address Near Campus
+                  Physical Office / Campus Address (Optional)
                 </label>
                 <input
                   type="text"
@@ -244,17 +230,17 @@ export const BusinessVerificationPage: React.FC = () => {
                 />
               </div>
 
-              {/* Upload Box */}
+              {/* Upload Box for Proof of Business */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                  Upload CAC Certificate or ID Scan (Optional)
+                  Upload Proof of Business (Photo of banner, logo, office building, or CAC)
                 </label>
                 <label className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-emerald-300 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/20 cursor-pointer hover:border-emerald-500 transition-colors">
                   <Upload className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mb-2" />
                   <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                    {uploadedDocName ? `Uploaded File: ${uploadedDocName}` : 'Click to select image or PDF document'}
+                    {uploadedDocName ? `Uploaded File: ${uploadedDocName}` : 'Click to select image (Banner, Logo, Office Photo, CAC)'}
                   </span>
-                  <span className="text-[10px] text-slate-400 mt-1">Supports JPG, PNG, PDF up to 10MB</span>
+                  <span className="text-[10px] text-slate-400 mt-1">Supports JPG, PNG, WEBP, PDF up to 10MB</span>
                   <input type="file" accept="image/*,.pdf" onChange={handleFileUpload} className="hidden" />
                 </label>
               </div>
@@ -269,11 +255,11 @@ export const BusinessVerificationPage: React.FC = () => {
                   {uploading ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Saving Verification...</span>
+                      <span>Saving Business Verification...</span>
                     </>
                   ) : (
                     <>
-                      <span>Complete Business Verification & Proceed</span>
+                      <span>Submit Business Verification & Finish Onboarding</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

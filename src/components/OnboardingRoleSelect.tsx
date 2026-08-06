@@ -130,7 +130,7 @@ export const OnboardingRoleSelect: React.FC = () => {
           className="p-8 rounded-3xl bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-900/60 hover:border-indigo-500 shadow-lg flex flex-col justify-between space-y-6 transition-all relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-bl-xl flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5" /> CAC Verified
+            <ShieldCheck className="w-3.5 h-3.5" /> Verified Agency
           </div>
 
           <div className="space-y-4">
@@ -146,14 +146,14 @@ export const OnboardingRoleSelect: React.FC = () => {
                 Property Business & Agent
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                List student hostel apartments, manage room availability, receive inspection appointments, and complete CAC / Government ID verification.
+                List student hostel apartments, manage room availability, receive inspection appointments, and register your agency business name & proof.
               </p>
             </div>
 
             <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 font-medium pt-2">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                <span>CAC Business & Government ID verification</span>
+                <span>Agency Name & Proof of Business verification</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
@@ -171,7 +171,7 @@ export const OnboardingRoleSelect: React.FC = () => {
               onClick={() => handleSelectRole('agent', activeTab === 'signup' ? 'signup' : 'login')}
               className="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-colors"
             >
-              <span>{activeTab === 'signup' ? 'Register Agent (CAC / ID)' : 'Sign In as Agent'}</span>
+              <span>{activeTab === 'signup' ? 'Register Agent (Business Profile)' : 'Sign In as Agent'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -186,9 +186,9 @@ export const OnboardingRoleSelect: React.FC = () => {
             <ShieldCheck className="w-7 h-7" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-extrabold text-base text-white">CAC & Government ID Business Verification Standard</h4>
+            <h4 className="font-extrabold text-base text-white">Agency & Business Verification Standard</h4>
             <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-              Campora enforces strict identity compliance. All hostel managers must submit Corporate Affairs Commission (CAC) business registration or a valid Nigerian Government ID (NIN, Voter's Card, Driver's License, or Passport) to obtain the Verified Gold Badge.
+              Campora ensures student trust on campus. All hostel managers & property agents register their Business / Agency Name and upload proof of business (banner photo, logo, office building, or CAC) to obtain the Verified Gold Badge.
             </p>
           </div>
         </div>
@@ -200,7 +200,7 @@ export const OnboardingRoleSelect: React.FC = () => {
           }}
           className="px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shrink-0 transition-colors shadow-lg shadow-amber-500/20"
         >
-          Verify Business Documents Now
+          Verify Agency Business Now
         </button>
       </div>
 

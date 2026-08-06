@@ -1271,7 +1271,7 @@ export const AgentDashboard: React.FC = () => {
               <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
               <h4 className="font-extrabold text-base text-emerald-900 dark:text-emerald-100">Verification Under Review</h4>
               <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                Our trust & safety team is auditing your NIN / CAC documents. You will receive an email confirmation within 24 hours.
+                Our trust & safety team is auditing your business name and proof of business upload. You will receive an email confirmation shortly.
               </p>
             </div>
           ) : (
@@ -1282,38 +1282,60 @@ export const AgentDashboard: React.FC = () => {
                   type="text"
                   value={agencyName}
                   onChange={e => setAgencyName(e.target.value)}
+                  placeholder="e.g. Prime Student Residences / Chidi Hostels"
                   className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">National Identity Number (NIN) or CAC No.</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Proof of Business Type</label>
+                <select
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-slate-100"
+                >
+                  <option value="banner">Business Banner / Office Signpost Photo</option>
+                  <option value="logo">Agency Logo / Business Brand Image</option>
+                  <option value="office_photo">Physical Office Frontage / Workspace Photo</option>
+                  <option value="cac">CAC Registration Document (Optional)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Upload Proof of Business Image</label>
                 <input
-                  type="text"
-                  value={govId}
-                  onChange={e => setGovId(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-slate-100"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={e => {
+                    if (e.target.files && e.target.files[0]) {
+                      addToast('Proof Attached', `${e.target.files[0].name} ready for verification`, 'info');
+                    }
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-slate-100 cursor-pointer"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Physical Office Location Near Campus</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Physical Office Location Near Campus (Optional)</label>
                 <input
                   type="text"
                   value={officeAddress}
                   onChange={e => setOfficeAddress(e.target.value)}
+                  placeholder="e.g. 14 Commercial Gate, Akoka, Yaba, Lagos"
                   className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-slate-100"
                 />
               </div>
 
               <button
                 onClick={() => {
+                  if (!agencyName.trim()) {
+                    addToast('Missing Business Name', 'Please enter your agency or business name.', 'warning');
+                    return;
+                  }
                   setVerificationSubmitted(true);
-                  addToast('Documents Submitted', 'Your verification request was sent to Campora Admins.');
+                  addToast('Proof Submitted', 'Your agency verification request was sent for approval.');
                 }}
-                className="w-full py-3 rounded-2xl bg-indigo-600 text-white font-extrabold text-xs hover:bg-indigo-700 shadow-md"
+                className="w-full py-3 rounded-2xl bg-indigo-600 text-white font-extrabold text-xs hover:bg-indigo-700 shadow-md transition-colors"
               >
-                Submit Documents for Gold Verification
+                Submit Agency Proof for Gold Verification
               </button>
             </div>
           )}

@@ -12,6 +12,10 @@ export interface User {
   isVerifiedAgent?: boolean;
   verificationStatus?: 'none' | 'pending' | 'verified' | 'rejected';
   emailVerified?: boolean;
+  businessName?: string;
+  proofType?: 'banner' | 'logo' | 'office_photo' | 'cac' | 'other';
+  proofUrl?: string;
+  officeAddress?: string;
   createdAt: string;
 }
 
@@ -21,10 +25,9 @@ export interface AgentVerification {
   agentName: string;
   agentEmail: string;
   businessName: string;
-  idType: 'national_id' | 'passport' | 'drivers_license' | 'business_reg';
-  idNumber: string;
-  idDocumentUrl: string;
-  proofOfOwnershipUrl: string;
+  proofType: 'banner' | 'logo' | 'office_photo' | 'cac' | 'other';
+  proofUrl?: string;
+  officeAddress?: string;
   status: 'pending' | 'verified' | 'rejected';
   submittedAt: string;
   reviewedAt?: string;
