@@ -51,6 +51,8 @@ interface AuthContextType {
   setSelectedUniversity: (uni: University | null) => void;
   activeView: string;
   setActiveView: (view: string) => void;
+  selectedInfoDocId: string;
+  setSelectedInfoDocId: (docId: string) => void;
   selectedListing: Listing | null;
   setSelectedListing: (listing: Listing | null) => void;
   isAuthModalOpen: boolean;
@@ -135,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [selectedUniversity, setSelectedUniversity] = useState<University | null>(INITIAL_UNIVERSITIES[0]);
   const [activeView, setActiveView] = useState<string>('home');
+  const [selectedInfoDocId, setSelectedInfoDocId] = useState<string>('terms-and-conditions');
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
@@ -535,6 +538,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSelectedUniversity,
         activeView,
         setActiveView,
+        selectedInfoDocId,
+        setSelectedInfoDocId,
         selectedListing,
         setSelectedListing,
         isAuthModalOpen,

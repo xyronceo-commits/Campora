@@ -103,21 +103,21 @@ export const AuthModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm overflow-y-auto">
+      <div className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 my-8"
+          className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 my-auto max-h-[92vh] flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center text-lg shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-black text-white font-black flex items-center justify-center text-base shadow-sm">
                 C
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                   {authModalTab === 'login' && 'Sign In to Campora'}
                   {authModalTab === 'student_signup' && 'Student Account Sign Up'}
                   {authModalTab === 'agent_signup' && 'Property Agent Sign Up'}
@@ -125,16 +125,16 @@ export const AuthModal: React.FC = () => {
                   {authModalTab === 'forgot_password' && 'Reset Account Password'}
                   {authModalTab === 'email_verification_sent' && 'Verify Your Email Address'}
                 </h3>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-neutral-500">
                   {authModalTab === 'agent_signup'
                     ? 'Create an agent account (Business Verification follows)'
-                    : 'Verified Nigerian Student Housing Portal'}
+                    : 'Verified Student Housing Portal'}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setAuthModalOpen(false)}
-              className="p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="p-1.5 rounded-xl hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
             >
               <X className="w-5 h-5" />
             </button>
@@ -142,33 +142,33 @@ export const AuthModal: React.FC = () => {
 
           {/* Role Tab Selector */}
           {authModalTab !== 'forgot_password' && authModalTab !== 'email_verification_sent' && (
-            <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900 text-xs font-bold overflow-x-auto no-scrollbar">
+            <div className="flex border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-950 text-xs font-bold shrink-0">
               <button
                 onClick={() => setAuthModalTab('student_signup')}
-                className={`flex-1 min-w-[100px] py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
                   authModalTab === 'student_signup'
-                    ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-800'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-neutral-900'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-800'
                 }`}
               >
                 <GraduationCap className="w-3.5 h-3.5" /> Student
               </button>
               <button
                 onClick={() => setAuthModalTab('agent_signup')}
-                className={`flex-1 min-w-[120px] py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-3 text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
                   authModalTab === 'agent_signup'
-                    ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-800'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    ? 'border-black dark:border-white text-black dark:text-white bg-white dark:bg-neutral-900'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-800'
                 }`}
               >
                 <Building2 className="w-3.5 h-3.5" /> Agent / CAC
               </button>
               <button
                 onClick={() => setAuthModalTab('login')}
-                className={`flex-1 min-w-[90px] py-3 text-center border-b-2 transition-colors ${
+                className={`flex-1 py-3 text-center border-b-2 transition-colors ${
                   authModalTab === 'login'
-                    ? 'border-slate-800 dark:border-slate-100 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-neutral-900'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-800'
                 }`}
               >
                 Sign In
@@ -177,7 +177,7 @@ export const AuthModal: React.FC = () => {
           )}
 
           {/* Form Body */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
             {/* Google OAuth Button */}
             {authModalTab !== 'forgot_password' && authModalTab !== 'email_verification_sent' && (
               <div className="space-y-3 pb-2 border-b border-slate-200 dark:border-slate-700">

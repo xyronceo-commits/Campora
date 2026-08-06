@@ -7,12 +7,12 @@ import { Listing } from '../types';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { 
   Search, Sparkles, ShieldCheck, Calendar, GraduationCap, MapPin, Navigation, 
-  CheckCircle, ArrowRight, Star, Building2, UserCheck, ShieldAlert
+  CheckCircle2, ArrowRight, Star, Building2, Zap, Droplets, Shield, Clock,
+  Check, X
 } from 'lucide-react';
-import { motion } from 'motion/react';
 
 export const LandingPage: React.FC = () => {
-  const { setSelectedUniversity, setActiveView, setAuthModalOpen, setAuthModalTab, addToast } = useAuth();
+  const { user, setSelectedUniversity, setActiveView, setAuthModalOpen, setAuthModalTab } = useAuth();
 
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -26,6 +26,11 @@ export const LandingPage: React.FC = () => {
 
   const handleAiSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      setAuthModalTab('student_signup');
+      setAuthModalOpen(true);
+      return;
+    }
     if (!aiPrompt.trim()) {
       setActiveView('search');
       return;
@@ -34,7 +39,7 @@ export const LandingPage: React.FC = () => {
     try {
       await searchAccommodationWithAi(aiPrompt);
       setActiveView('search');
-    } catch (err) {
+    } catch {
       setActiveView('search');
     } finally {
       setAiLoading(false);
@@ -42,282 +47,339 @@ export const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-16 pb-16">
+    <div className="space-y-12 sm:space-y-16 pb-16">
       
-      {/* Hero Section */}
-      <section className="relative pt-12 pb-20 px-4 sm:px-6 overflow-hidden bg-slate-950 text-white rounded-b-[40px] shadow-xl border-b border-emerald-900/30">
-        <div className="max-w-5xl mx-auto text-center space-y-6 relative z-10">
+      {/* 1. HERO SECTION - Clean product focus */}
+      <section className="bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 pt-6 pb-12 sm:pt-10 sm:pb-16 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
           
-          {/* Top Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-800/80 text-xs font-bold">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Verified Agents • Zero Upfront Rent Payments • Free Inspections</span>
+          {/* Status pill */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-medium text-neutral-800 dark:text-neutral-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span>Verified Student Accommodation in Nigeria</span>
+            <span className="text-neutral-300 dark:text-neutral-700">•</span>
+            <span className="text-emerald-700 dark:text-emerald-400 font-bold">Verified Campus Accommodations</span>
           </div>
 
-          {/* Hero Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-balance">
-            Discover Verified Student Accommodation Near <span className="text-emerald-400">Your Campus</span>
+          {/* Headline */}
+          <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black tracking-tight text-neutral-900 dark:text-white leading-[1.12]">
+            Find Verified Student Housing Near <span className="text-emerald-600 dark:text-emerald-400">Your Campus Gate</span>
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Campora connects Nigerian university, polytechnic, and college students with verified landlords and agents offering hostels, self-contain apartments, and shared lodges near campus.
+          {/* Subtext */}
+          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto">
+            Campora connects university, polytechnic, and college students with verified landlords and agents for hostels, self-contains, and lodges. Inspect physically before making any rent payment.
           </p>
 
-          {/* AI Prompt Input Bar */}
-          <div className="max-w-2xl mx-auto p-2 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
-            <form onSubmit={handleAiSubmit} className="flex items-center gap-2">
+          {/* Primary Search Bar */}
+          <div className="p-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 shadow-sm focus-within:border-neutral-900 dark:focus-within:border-white transition-all space-y-2 text-left">
+            <form onSubmit={handleAiSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <div className="relative flex-1">
-                <Sparkles className="w-5 h-5 text-emerald-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
                   placeholder="e.g. Self-contain under ₦300k near UNILAG gate with solar power..."
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950 text-white placeholder:text-slate-400 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 border border-slate-800"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 text-xs sm:text-sm focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={aiLoading}
-                className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm transition-colors flex items-center gap-2 shrink-0 shadow-md"
+                className="px-5 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shrink-0"
               >
                 {aiLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Search className="w-4 h-4" />
-                    <span>Search</span>
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Search Housing</span>
                   </>
                 )}
               </button>
             </form>
+
+            {/* Quick Preset Filter Tags */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 px-1">
+              <span className="text-[11px] font-semibold text-neutral-400 mr-1">Popular:</span>
+              {[
+                'Self-Contain', 
+                'Single Room', 
+                'Under ₦300k', 
+                '24/7 Power', 
+                '< 5 min Walk'
+              ].map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => {
+                    if (!user) {
+                      setAuthModalTab('student_signup');
+                      setAuthModalOpen(true);
+                      return;
+                    }
+                    setAiPrompt(tag);
+                    setActiveView('search');
+                  }}
+                  className="px-2.5 py-0.5 rounded-md bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-[11px] font-medium transition-colors"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* University Tabs Quick Select */}
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs font-semibold text-slate-400 mr-2">Top Campuses:</span>
-            {INITIAL_UNIVERSITIES.slice(0, 8).map(uni => (
+          {/* Key Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+            <button
+              onClick={() => {
+                if (!user) {
+                  setAuthModalTab('student_signup');
+                  setAuthModalOpen(true);
+                } else {
+                  setActiveView('search');
+                }
+              }}
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition-colors shadow-sm flex items-center gap-2"
+            >
+              <span>Browse All Campus Listings</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 2. TOP CAMPUSES - Simple, clean pills */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Hostels Available Across Major Universities</span>
+            </h2>
+            <button
+              onClick={() => {
+                if (!user) {
+                  setAuthModalTab('student_signup');
+                  setAuthModalOpen(true);
+                } else {
+                  setActiveView('search');
+                }
+              }}
+              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              All Campuses
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+            {INITIAL_UNIVERSITIES.slice(0, 12).map(uni => (
               <button
                 key={uni.id}
                 onClick={() => {
-                  setSelectedUniversity(uni);
-                  setActiveView('search');
+                  if (!user) {
+                    setAuthModalTab('student_signup');
+                    setAuthModalOpen(true);
+                  } else {
+                    setSelectedUniversity(uni);
+                    setActiveView('search');
+                  }
                 }}
-                className="px-3 py-1.5 rounded-full bg-slate-900 hover:bg-emerald-950 hover:border-emerald-500 text-slate-200 text-xs font-semibold border border-slate-800 transition-all flex items-center gap-1.5"
+                className="p-3 rounded-xl bg-neutral-50 hover:bg-black hover:text-white dark:bg-neutral-800/60 dark:hover:bg-white dark:hover:text-black border border-neutral-200 dark:border-neutral-800 text-left transition-all group"
               >
-                <GraduationCap className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{uni.shortName}</span>
-                <span className="text-[10px] text-slate-400 font-normal">({uni.state})</span>
+                <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-inherit">
+                  {uni.shortName}
+                </div>
+                <div className="text-[11px] text-neutral-500 dark:text-neutral-400 group-hover:text-inherit/80 truncate">
+                  {uni.state} • {uni.totalListings} listings
+                </div>
               </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Role Gateway Gateway Card Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 text-white border border-slate-800 shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-left">
-            <span className="px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider">
-              Onboarding Gateway
-            </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white">
-              Choose Your Account Type & Sign In
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-              Access specialized portals tailored for Tertiary Students and CAC-Verified Property Agents.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
-            <button
-              onClick={() => setActiveView('role_select')}
-              className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm transition-colors shadow-md flex items-center gap-2"
-            >
-              <span>Get Started & Select Role</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Pillars */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 w-fit">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Verified Agents Only</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Agents submit government ID, property documentation, and office address before listing.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-            <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-fit">
-              <Calendar className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Free Physical Inspections</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Schedule inspection with verified agents at no cost before making any rent commitment.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 w-fit">
-              <Navigation className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Walk Time to Gate</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Know exact walking distance in minutes to campus gates, shuttle stops, and supermarkets.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-            <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-fit">
-              <Star className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Student Reviews</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Read rating breakdowns on security, 24/7 electricity, water supply, and noise levels.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Accommodations */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-        <div className="flex items-center justify-between">
+      {/* 3. FEATURED ACCOMMODATIONS - Realistic student housing cards */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-5">
+        <div className="flex items-end justify-between border-b border-neutral-200 dark:border-neutral-800 pb-3">
           <div>
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-              Featured Accommodations
+            <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
+              Verified Campus Hostels
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Verified hostels and apartments near top African universities
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+              Inspected properties near campus gates with transparent ratings on power, water, and safety.
             </p>
           </div>
 
           <button
-            onClick={() => setActiveView('search')}
-            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+            onClick={() => {
+              if (!user) {
+                setAuthModalTab('student_signup');
+                setAuthModalOpen(true);
+              } else {
+                setActiveView('search');
+              }
+            }}
+            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0"
           >
-            <span>View All Listings</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>View All</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {featuredListings.map(listing => (
             <ListingCard key={listing.id} listing={listing} />
           ))}
         </div>
       </section>
 
-      {/* University Campuses Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-        <div className="text-center max-w-xl mx-auto space-y-2">
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            Explore Hostels by University Campus
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Direct access to student housing listings across Nigeria, Kenya, South Africa, Ghana, and Uganda.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {INITIAL_UNIVERSITIES.map(uni => (
-            <div
-              key={uni.id}
-              onClick={() => {
-                setSelectedUniversity(uni);
-                setActiveView('search');
-              }}
-              className="group p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm hover:shadow-lg hover:border-emerald-500/50 transition-all cursor-pointer flex items-center justify-between"
-            >
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                  {uni.country}
-                </span>
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  {uni.name}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {uni.city} • {uni.totalListings} hostels available
-                </p>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                <ArrowRight className="w-4 h-4" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* How Campora Works Step By Step */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 bg-slate-900 text-white rounded-3xl space-y-8">
-        <div className="text-center max-w-xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Simple 3-Step Process</span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold">How Campora Works</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-6 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3 relative">
-            <span className="text-4xl font-black text-emerald-500/40 absolute top-4 right-4">01</span>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 font-bold flex items-center justify-center text-lg">
-              1
-            </div>
-            <h3 className="text-base font-bold">Discover & Compare</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Use natural language AI search or filters to compare verified hostels, distance to gate, price, and water/power ratings.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3 relative">
-            <span className="text-4xl font-black text-emerald-500/40 absolute top-4 right-4">02</span>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 font-bold flex items-center justify-center text-lg">
-              2
-            </div>
-            <h3 className="text-base font-bold">Book Free Inspection</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Select an inspection date and meet verified agents physically at the property. Never pay any fee before inspecting!
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3 relative">
-            <span className="text-4xl font-black text-emerald-500/40 absolute top-4 right-4">03</span>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 font-bold flex items-center justify-center text-lg">
-              3
-            </div>
-            <h3 className="text-base font-bold">Move In Safely</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Finalize tenancy agreement directly with landlord/verified agent and enjoy your academic semester hassle-free.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Become an Agent CTA Banner */}
+      {/* 4. COMPARISON TABLE - Traditional vs Campora (Clear, practical, no hype) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="p-8 sm:p-12 rounded-3xl bg-indigo-600 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-indigo-600/20">
-          <div className="space-y-2 max-w-xl">
-            <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider">Are You a Landlord or Agent?</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold">List Your Hostels on Campora</h2>
-            <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed">
-              Reach thousands of students searching for accommodation near major universities across Nigeria, Kenya, South Africa, and Ghana.
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 space-y-6">
+          <div className="max-w-xl space-y-1">
+            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              Designed For Nigerian Tertiary Students
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
+              Why Students Choose Campora
+            </h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              We eliminated non-refundable registration fees, unverified agents, and fake location descriptions.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="py-3 px-3">Feature</th>
+                  <th className="py-3 px-3 text-neutral-500 dark:text-neutral-400">Traditional Agents</th>
+                  <th className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/50 dark:bg-emerald-950/20 rounded-t-xl">Campora Standard</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
+                <tr>
+                  <td className="py-3.5 px-3 font-semibold text-neutral-900 dark:text-neutral-100">Inspection Process</td>
+                  <td className="py-3.5 px-3 text-red-600 dark:text-red-400 flex items-center gap-1.5 font-medium">
+                    <X className="w-4 h-4 shrink-0" />
+                    <span>Unpredictable registration charges</span>
+                  </td>
+                  <td className="py-3.5 px-3 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center gap-1.5">
+                    <Check className="w-4 h-4 shrink-0" />
+                    <span>Standard Scheduled Physical Inspection</span>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td className="py-3.5 px-3 font-semibold text-neutral-900 dark:text-neutral-100">Agent Verification</td>
+                  <td className="py-3.5 px-3 text-neutral-500 dark:text-neutral-400 font-medium">
+                    Unchecked social media claims
+                  </td>
+                  <td className="py-3.5 px-3 text-neutral-900 dark:text-neutral-100 font-bold bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>NIN / CAC Verified Agents</span>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td className="py-3.5 px-3 font-semibold text-neutral-900 dark:text-neutral-100">Location Accuracy</td>
+                  <td className="py-3.5 px-3 text-neutral-500 dark:text-neutral-400 font-medium">
+                    Vague "close to campus"
+                  </td>
+                  <td className="py-3.5 px-3 text-neutral-900 dark:text-neutral-100 font-bold bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Exact walk time to gate (e.g. 5 mins)</span>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td className="py-3.5 px-3 font-semibold text-neutral-900 dark:text-neutral-100">Water & Electricity Ratings</td>
+                  <td className="py-3.5 px-3 text-neutral-500 dark:text-neutral-400 font-medium">
+                    Discovered only after moving in
+                  </td>
+                  <td className="py-3.5 px-3 text-neutral-900 dark:text-neutral-100 font-bold bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center gap-1.5 rounded-b-xl">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Rated by current student tenants</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. 3-STEP PROCESS - Clean sequential timeline */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="bg-black text-white rounded-2xl p-6 sm:p-10 border border-neutral-800 space-y-8">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">3-Step Process</span>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">How Students Secure Housing</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-3">
+              <div className="w-7 h-7 rounded-md bg-emerald-500 text-black font-black flex items-center justify-center text-xs">
+                01
+              </div>
+              <h3 className="text-base font-bold text-white">Search Near Your Gate</h3>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Filter by university, budget, walking distance to faculty or gate, and required facilities like solar inverter or borehole.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-3">
+              <div className="w-7 h-7 rounded-md bg-emerald-500 text-black font-black flex items-center justify-center text-xs">
+                02
+              </div>
+              <h3 className="text-base font-bold text-white">Book Physical Inspection</h3>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Pick a date and meet the verified agent physically at the hostel. Never make rent payments before viewing the property.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-3">
+              <div className="w-7 h-7 rounded-md bg-emerald-500 text-black font-black flex items-center justify-center text-xs">
+                03
+              </div>
+              <h3 className="text-base font-bold text-white">Finalize & Move In</h3>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Receive official tenancy agreement directly from the verified agent or landlord and settle into your semester home.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. AGENT & LANDLORD CALLOUT */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-left">
+            <span className="px-2.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-[10px] font-bold uppercase tracking-wider border border-neutral-200 dark:border-neutral-700">
+              For Property Managers & Landlords
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">
+              List Your Campus Properties
+            </h2>
+            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 max-w-xl">
+              Connect directly with verified students searching for off-campus accommodation near UNILAG, OAU, UI, UNN, FUTA, and 50+ tertiary institutions.
             </p>
           </div>
 
           <button
             onClick={() => {
-              setAuthModalTab('agent_signup');
-              setAuthModalOpen(true);
+              if (!user) {
+                setAuthModalTab('agent_signup');
+                setAuthModalOpen(true);
+              } else {
+                setActiveView('role_select');
+              }
             }}
-            className="px-6 py-3.5 rounded-2xl bg-white text-indigo-900 font-extrabold text-xs sm:text-sm hover:bg-indigo-50 transition-colors shadow-lg shrink-0 flex items-center gap-2"
+            className="px-5 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs sm:text-sm hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-sm shrink-0 flex items-center gap-2"
           >
-            <Building2 className="w-4 h-4 text-indigo-600" />
-            <span>Register Agent Profile</span>
+            <Building2 className="w-4 h-4 text-emerald-500" />
+            <span>Agent Registration</span>
           </button>
         </div>
       </section>

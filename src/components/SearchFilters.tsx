@@ -189,30 +189,29 @@ export const SearchFilters: React.FC = () => {
         </div>
 
         {selectedUniversity && (
-          <div className="p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+          <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-black text-white font-black text-xs flex items-center justify-center shrink-0">
               {selectedUniversity.shortName.substring(0, 3)}
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400">Selected Campus</p>
-              <p className="text-xs font-extrabold text-slate-900 dark:text-slate-100">{selectedUniversity.name}</p>
+              <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Selected Campus</p>
+              <p className="text-xs font-bold text-neutral-900 dark:text-neutral-100">{selectedUniversity.name}</p>
             </div>
           </div>
         )}
       </div>
 
       {/* AI Search Header Bar */}
-      <div className="p-6 rounded-3xl bg-slate-900 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="p-6 rounded-2xl bg-black text-white border border-neutral-800 shadow-sm relative overflow-hidden">
         <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-900 text-emerald-400 border border-neutral-700 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             Natural Language AI Accommodation Finder
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
             Describe Your Ideal Student Home
           </h2>
-          <p className="text-xs text-slate-300">
+          <p className="text-xs text-neutral-400">
             e.g. "Find me a quiet self-contain apartment under 300k near UNILAG gate with 24/7 electricity and fiber internet."
           </p>
 

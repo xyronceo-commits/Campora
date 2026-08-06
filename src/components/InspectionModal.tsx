@@ -75,7 +75,7 @@ export const InspectionModal: React.FC = () => {
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Book Free Property Inspection
+                Book Property Inspection
               </h3>
             </div>
             <button
@@ -123,7 +123,7 @@ export const InspectionModal: React.FC = () => {
               {/* Agent Note */}
               <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>Inspection is 100% free with verified agent {inspectionModalListing.agentName}. Never pay any fee until you inspect and agree!</span>
+                <span>Physical inspection with verified agent {inspectionModalListing.agentName}. Standard agent inspection fee applies upon viewing.</span>
               </div>
 
               {/* Date & Time Select */}

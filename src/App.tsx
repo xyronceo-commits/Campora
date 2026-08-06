@@ -16,23 +16,33 @@ import { AuthModal } from './components/AuthModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { UserProfilePage } from './components/UserProfilePage';
 import { BusinessVerificationPage } from './components/BusinessVerificationPage';
+import { InfoHub } from './components/InfoHub';
 import { AiChatbot } from './components/AiChatbot';
 import { ToastContainer } from './components/ToastContainer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 const MainContent: React.FC = () => {
-  const { activeView } = useAuth();
+  const { user, activeView, setActiveView, selectedInfoDocId, setAuthModalOpen, setAuthModalTab } = useAuth();
+
+  React.useEffect(() => {
+    if (!user && activeView !== 'home' && activeView !== 'role_select' && activeView !== 'onboarding' && activeView !== 'info_hub') {
+      setAuthModalTab('student_signup');
+      setAuthModalOpen(true);
+      setActiveView('home');
+    }
+  }, [user, activeView, setActiveView, setAuthModalOpen, setAuthModalTab]);
 
   return (
     <main className="flex-1 min-h-[80vh] pb-16 md:pb-0">
       {activeView === 'home' && <LandingPage />}
-      {activeView === 'search' && <SearchFilters />}
-      {activeView === 'saved' && <SearchFilters />}
-      {activeView === 'profile' && <UserProfilePage />}
-      {activeView === 'student_dashboard' && <StudentDashboard />}
-      {activeView === 'agent_dashboard' && <AgentDashboard />}
-      {activeView === 'agent_verification' && <BusinessVerificationPage />}
-      {activeView === 'admin_dashboard' && <AdminDashboard />}
+      {activeView === 'info_hub' && <InfoHub initialDocId={selectedInfoDocId} />}
+      {activeView === 'search' && user && <SearchFilters />}
+      {activeView === 'saved' && user && <SearchFilters />}
+      {activeView === 'profile' && user && <UserProfilePage />}
+      {activeView === 'student_dashboard' && user && <StudentDashboard />}
+      {activeView === 'agent_dashboard' && user && <AgentDashboard />}
+      {activeView === 'agent_verification' && user && <BusinessVerificationPage />}
+      {activeView === 'admin_dashboard' && user && <AdminDashboard />}
       {(activeView === 'role_select' || activeView === 'onboarding') && <OnboardingRoleSelect />}
     </main>
   );

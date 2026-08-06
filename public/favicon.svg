@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <style>
+      .pin { fill: #0f172a; }
+      .roof { fill: #ffffff; }
+    </style>
+  </defs>
+  <!-- Background Circle for contrast in dark/light browser tabs -->
+  <circle cx="256" cy="256" r="248" fill="#10b981" opacity="0.12"/>
+  
+  <!-- Map Pin Body -->
+  <path class="pin" d="M 256 32 C 158.8 32 80 110.8 80 208 C 80 322.8 232 462.4 248.8 477.6 C 252.8 481.2 259.2 481.2 263.2 477.6 C 280 462.4 432 322.8 432 208 C 432 110.8 353.2 32 256 32 Z" />
+  
+  <!-- Inner Circle Cutout Background -->
+  <circle cx="256" cy="192" r="112" fill="#0f172a" />
+  
+  <!-- White Roof & Chimney Motif inside Pin Head -->
+  <!-- Outer Arch/Sun ring cutout -->
+  <path fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round" d="M 164 216 A 96 96 0 0 1 348 216" />
+  
+  <!-- Main Roof Ridge -->
+  <path class="roof" d="M 256 128 L 336 192 L 320 204 L 256 152 L 192 204 L 176 192 Z" />
+  
+  <!-- Secondary Inner Roof Lines -->
+  <path class="roof" d="M 256 160 L 312 204 L 300 214 L 256 180 L 212 214 L 200 204 Z" />
+  
+  <!-- Chimney -->
+  <rect class="roof" x="288" y="148" width="16" height="28" rx="2" />
+</svg>

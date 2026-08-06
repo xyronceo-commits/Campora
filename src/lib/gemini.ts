@@ -31,7 +31,7 @@ export async function chatWithCamporaBot(message: string, history?: any[]): Prom
     return data.reply;
   } catch (err) {
     console.warn('AI chat error', err);
-    return 'Hello! I am Campora AI Assistant. You can search hostels, schedule free inspections, or contact verified agents safely through Campora!';
+    return 'Hello! I am Campora AI Assistant. You can search hostels, schedule physical inspections, or contact verified agents safely through Campora!';
   }
 }
 

@@ -64,7 +64,7 @@ export const StudentDashboard: React.FC = () => {
       gender: 'Male',
       budgetPerHead: 180000,
       location: 'Asher / Parakin, Ile-Ife',
-      roomType: '2 Bedroom Flat (1 Room Free)',
+      roomType: '2 Bedroom Flat (1 Room Available)',
       description: 'Need a respectful male student to occupy the second bedroom in my 2-bedroom flat. Constant water, prepaid meter, paved compound.',
       preferredQualities: ['Responsible', 'Pays bills on time', 'Friendly'],
       contactPhone: '+234 803 987 6543',
@@ -306,7 +306,7 @@ export const StudentDashboard: React.FC = () => {
               <Calendar className="w-12 h-12 text-slate-400 mx-auto" />
               <h4 className="font-bold text-base text-slate-800 dark:text-slate-200">No Inspections Booked Yet</h4>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Explore hostels around your campus, select a convenient date, and click "Book Free Physical Inspection" to arrange a viewing with verified agents.
+                Explore hostels around your campus, select a convenient date, and click "Book Physical Inspection" to arrange a viewing with verified agents.
               </p>
             </div>
           ) : (

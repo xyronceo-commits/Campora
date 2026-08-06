@@ -10,6 +10,162 @@ interface ChatMessage {
   timestamp: string;
 }
 
+// Component to render chat text and automatically convert any raw Markdown table syntax or HTML table tags into clean HTML <table> elements
+const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
+  const parseHtmlTableString = (htmlText: string) => {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, 'text/html');
+      const tableEl = doc.querySelector('table');
+      if (!tableEl) return null;
+
+      const headers: string[] = [];
+      const rows: string[][] = [];
+
+      tableEl.querySelectorAll('th').forEach(th => headers.push(th.textContent?.trim() || ''));
+      tableEl.querySelectorAll('tr').forEach(tr => {
+        const rowCells: string[] = [];
+        const tds = tr.querySelectorAll('td');
+        if (tds.length > 0) {
+          tds.forEach(td => rowCells.push(td.textContent?.trim() || ''));
+          rows.push(rowCells);
+        }
+      });
+
+      if (headers.length === 0 && rows.length > 0) {
+        const firstRow = rows.shift();
+        if (firstRow) headers.push(...firstRow);
+      }
+
+      return { headers, rows };
+    } catch {
+      return null;
+    }
+  };
+
+  const parseBlocks = (input: string) => {
+    if (input.includes('<table') && input.includes('</table>')) {
+      const parts = input.split(/(<table[\s\S]*?<\/table>)/i);
+      return parts.map((part) => {
+        if (part.toLowerCase().includes('<table')) {
+          const parsed = parseHtmlTableString(part);
+          if (parsed && (parsed.headers.length > 0 || parsed.rows.length > 0)) {
+            return { type: 'parsedTable' as const, content: parsed };
+          }
+        }
+        return { type: 'rawText' as const, content: part };
+      });
+    }
+
+    const lines = input.split('\n');
+    const blocks: { type: 'text' | 'parsedTable'; content: string | { headers: string[]; rows: string[][] } }[] = [];
+    let currentTableLines: string[] = [];
+    let currentTextLines: string[] = [];
+
+    const flushText = () => {
+      if (currentTextLines.length > 0) {
+        blocks.push({ type: 'text', content: currentTextLines.join('\n') });
+        currentTextLines = [];
+      }
+    };
+
+    const flushTable = () => {
+      if (currentTableLines.length > 0) {
+        const tableRows = currentTableLines
+          .map(l => l.trim())
+          .filter(l => l.includes('|'))
+          .map(l => {
+            let rowStr = l;
+            if (rowStr.startsWith('|')) rowStr = rowStr.slice(1);
+            if (rowStr.endsWith('|')) rowStr = rowStr.slice(0, -1);
+            return rowStr.split('|').map(c => c.trim());
+          })
+          .filter(row => !row.every(c => /^[-:\s]+$/.test(c)));
+
+        if (tableRows.length > 0) {
+          const headers = tableRows[0];
+          const rows = tableRows.slice(1);
+          blocks.push({ type: 'parsedTable', content: { headers, rows } });
+        } else {
+          currentTextLines.push(...currentTableLines);
+        }
+        currentTableLines = [];
+      }
+    };
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const isTableLine = trimmed.includes('|') && (trimmed.startsWith('|') || trimmed.endsWith('|'));
+      if (isTableLine) {
+        flushText();
+        currentTableLines.push(trimmed);
+      } else {
+        flushTable();
+        currentTextLines.push(line);
+      }
+    }
+    flushText();
+    flushTable();
+
+    return blocks;
+  };
+
+  const blocks = parseBlocks(text);
+
+  return (
+    <div className="space-y-2">
+      {blocks.map((block, idx) => {
+        if (block.type === 'text' || block.type === 'rawText') {
+          const strContent = block.content as string;
+          if (!strContent.trim()) return null;
+          return (
+            <p key={idx} className="whitespace-pre-wrap leading-relaxed">
+              {strContent}
+            </p>
+          );
+        }
+
+        if (block.type === 'parsedTable') {
+          const { headers, rows } = block.content as { headers: string[]; rows: string[][] };
+          return (
+            <div key={idx} className="my-2.5 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shadow-sm p-0.5">
+              <table className="w-full text-left text-[11px] border-collapse min-w-[260px]">
+                {headers.length > 0 && (
+                  <thead>
+                    <tr className="bg-emerald-100/70 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-emerald-950 dark:text-emerald-300">
+                      {headers.map((h, hIdx) => (
+                        <th key={hIdx} className="px-3 py-2 font-bold tracking-wide">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                )}
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700/60 text-slate-700 dark:text-slate-200">
+                  {rows.map((row, rIdx) => (
+                    <tr 
+                      key={rIdx} 
+                      className={rIdx % 2 === 0 ? 'bg-white dark:bg-slate-900/60' : 'bg-slate-50/60 dark:bg-slate-800/40'}
+                    >
+                      {row.map((cell, cIdx) => (
+                        <td key={cIdx} className="px-3 py-2 leading-tight">
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
+
+        return null;
+      })}
+    </div>
+  );
+};
+
 export const AiChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -117,7 +273,7 @@ export const AiChatbot: React.FC = () => {
                   <h4 className="font-bold text-sm flex items-center gap-1.5">
                     Campora Assistant
                     <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-semibold border border-emerald-500/30">
-                      Gemini 3.6
+                      Smart AI
                     </span>
                   </h4>
                   <p className="text-[11px] text-slate-400 flex items-center gap-1">
@@ -151,13 +307,13 @@ export const AiChatbot: React.FC = () => {
                   )}
 
                   <div
-                    className={`max-w-[80%] p-3 rounded-2xl text-xs leading-relaxed ${
+                    className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed ${
                       msg.sender === 'user'
                         ? 'bg-emerald-600 text-white rounded-tr-none'
                         : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-tl-none shadow-sm'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                    <FormattedMessage text={msg.text} />
                     <span
                       className={`block text-[9px] mt-1 ${
                         msg.sender === 'user' ? 'text-emerald-200 text-right' : 'text-slate-400'

@@ -14,8 +14,12 @@ export const MobileBottomNav: React.FC = () => {
 
   const dashboardView = getDashboardView();
 
+  if (!user || activeView === 'home' || activeView === 'role_select' || activeView === 'onboarding') {
+    return null;
+  }
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 md:hidden px-2 py-1.5 shadow-lg">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-black/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 md:hidden px-2 py-1.5 shadow-lg">
       <div className="flex items-center justify-around text-center max-w-md mx-auto">
         {/* Home */}
         <button
@@ -23,7 +27,7 @@ export const MobileBottomNav: React.FC = () => {
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 transition-colors ${
             activeView === 'home'
               ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
           }`}
         >
           <Home className="w-5 h-5 mb-0.5" />
@@ -36,7 +40,7 @@ export const MobileBottomNav: React.FC = () => {
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 transition-colors ${
             activeView === 'search'
               ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
           }`}
         >
           <Search className="w-5 h-5 mb-0.5" />
@@ -49,7 +53,7 @@ export const MobileBottomNav: React.FC = () => {
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 transition-colors relative ${
             activeView === 'saved'
               ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
           }`}
         >
           <div className="relative inline-block">
@@ -70,7 +74,7 @@ export const MobileBottomNav: React.FC = () => {
             className={`flex flex-col items-center justify-center flex-1 py-1 px-1 transition-colors ${
               activeView === 'student_dashboard' || activeView === 'agent_dashboard' || activeView === 'admin_dashboard'
                 ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
             }`}
           >
             <LayoutDashboard className="w-5 h-5 mb-0.5" />
@@ -90,7 +94,7 @@ export const MobileBottomNav: React.FC = () => {
           className={`flex flex-col items-center justify-center flex-1 py-1 px-1 transition-colors ${
             activeView === 'profile'
               ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
           }`}
         >
           <UserIcon className="w-5 h-5 mb-0.5" />

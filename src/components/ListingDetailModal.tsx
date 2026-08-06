@@ -538,7 +538,7 @@ export const ListingDetailModal: React.FC = () => {
                     className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
                   >
                     <Calendar className="w-4 h-4" />
-                    Book Free Physical Inspection
+                    Book Physical Inspection
                   </button>
 
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center leading-normal">

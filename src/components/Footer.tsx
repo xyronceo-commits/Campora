@@ -1,126 +1,204 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
-import { ShieldCheck, Heart, Mail, Phone, MapPin, ExternalLink, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { setActiveView, setSelectedUniversity, setAuthModalOpen, setAuthModalTab } = useAuth();
+  const { 
+    setActiveView, 
+    setSelectedUniversity, 
+    setSelectedInfoDocId, 
+    setAuthModalOpen, 
+    setAuthModalTab 
+  } = useAuth();
+
+  const openDoc = (docId: string) => {
+    setSelectedInfoDocId(docId);
+    setActiveView('info_hub');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
-    <footer className="w-full bg-slate-900 text-slate-300 border-t border-slate-800 pt-16 pb-12">
+    <footer className="w-full bg-black text-neutral-400 border-t border-neutral-800 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-12">
-        {/* Top Grid */}
+        
+        {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           
-          {/* Brand Info */}
+          {/* Brand & Mission Info */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/20 shrink-0">
-                <div className="w-4 h-4 bg-white rounded-sm rotate-45 shadow-sm" />
+            <div 
+              onClick={() => setActiveView('home')} 
+              className="flex items-center gap-2.5 cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center shrink-0">
+                <div className="w-3.5 h-3.5 bg-emerald-500 rounded-sm rotate-45" />
               </div>
-              <span className="text-xl font-extrabold text-white tracking-tight uppercase">CAMPORA</span>
+              <span className="text-xl font-black text-white tracking-tight uppercase">CAMPORA</span>
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
+            <p className="text-xs text-neutral-400 leading-relaxed max-w-sm font-normal">
               Africa's premier student accommodation platform. Connecting university students with verified agents for hostels, self-contain apartments, and lodges near major African campuses.
             </p>
-
-            <div className="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-xs space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-indigo-400">
-                <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
-                Student Safety Mandate
-              </div>
-              <p className="text-[11px] text-slate-400 leading-snug">
-                Campora does not process rent payments. We connect you to verified agents for free physical inspections before you sign agreements.
-              </p>
+            <div className="pt-1 flex flex-wrap items-center gap-2 text-[11px] font-bold text-neutral-300">
+              <button 
+                onClick={() => openDoc('about-campora')} 
+                className="hover:text-emerald-400 underline"
+              >
+                About Us
+              </button>
+              <span>•</span>
+              <button 
+                onClick={() => openDoc('how-it-works')} 
+                className="hover:text-emerald-400 underline"
+              >
+                How It Works
+              </button>
+              <span>•</span>
+              <button 
+                onClick={() => openDoc('anti-fraud')} 
+                className="hover:text-emerald-400 underline"
+              >
+                Anti-Fraud Policy
+              </button>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Legal Documents */}
           <div className="space-y-3 text-xs">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Platform</h4>
-            <ul className="space-y-2 text-slate-400">
+            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Legal & Policies</h4>
+            <ul className="space-y-2 text-neutral-400">
               <li>
-                <button onClick={() => setActiveView('home')} className="hover:text-emerald-400 transition-colors">
-                  Featured Accommodations
+                <button onClick={() => openDoc('terms-and-conditions')} className="hover:text-emerald-400 transition-colors">
+                  Terms & Conditions
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveView('search')} className="hover:text-emerald-400 transition-colors">
-                  Advanced Housing Search
+                <button onClick={() => openDoc('privacy-policy')} className="hover:text-emerald-400 transition-colors">
+                  Privacy Policy
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveView('saved')} className="hover:text-emerald-400 transition-colors">
-                  Saved Bookmarks
+                <button onClick={() => openDoc('cookie-policy')} className="hover:text-emerald-400 transition-colors">
+                  Cookie Policy
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveView('search')} className="hover:text-emerald-400 transition-colors">
-                  Explore Student Hostels
+                <button onClick={() => openDoc('acceptable-use')} className="hover:text-emerald-400 transition-colors">
+                  Acceptable Use Policy
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('agent-terms')} className="hover:text-emerald-400 transition-colors">
+                  Agent Terms & Agreement
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('student-terms')} className="hover:text-emerald-400 transition-colors">
+                  Student Terms & Conduct
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('disclaimer')} className="hover:text-emerald-400 transition-colors">
+                  Platform Disclaimer
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Universities */}
+          {/* Trust & Safety */}
           <div className="space-y-3 text-xs">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Popular Universities</h4>
-            <ul className="space-y-2 text-slate-400">
-              {INITIAL_UNIVERSITIES.slice(0, 5).map(uni => (
-                <li key={uni.id}>
-                  <button
-                    onClick={() => {
-                      setSelectedUniversity(uni);
-                      setActiveView('search');
-                    }}
-                    className="hover:text-emerald-400 transition-colors text-left truncate max-w-[180px]"
-                  >
-                    {uni.name}
-                  </button>
-                </li>
-              ))}
+            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Trust & Safety</h4>
+            <ul className="space-y-2 text-neutral-400">
+              <li>
+                <button onClick={() => openDoc('community-guidelines')} className="hover:text-emerald-400 transition-colors">
+                  Community Guidelines
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('verification-policy')} className="hover:text-emerald-400 transition-colors">
+                  Agent Verification Policy
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('listing-quality')} className="hover:text-emerald-400 transition-colors">
+                  Listing Quality Standards
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('review-policy')} className="hover:text-emerald-400 transition-colors">
+                  Review & Rating Policy
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('anti-fraud')} className="hover:text-emerald-400 transition-colors">
+                  Anti-Fraud & Scam Prevention
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('report-abuse')} className="hover:text-emerald-400 transition-colors">
+                  Report Abuse & Violations
+                </button>
+              </li>
             </ul>
           </div>
 
-          {/* For Agents */}
+          {/* Support & Company */}
           <div className="space-y-3 text-xs">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Property Agents</h4>
-            <ul className="space-y-2 text-slate-400">
+            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Support & Company</h4>
+            <ul className="space-y-2 text-neutral-400">
               <li>
-                <button
-                  onClick={() => {
-                    setAuthModalTab('agent_signup');
-                    setAuthModalOpen(true);
-                  }}
-                  className="font-semibold text-emerald-400 hover:underline flex items-center gap-1"
-                >
+                <button onClick={() => openDoc('help-centre')} className="hover:text-emerald-400 transition-colors">
+                  Help Centre & Guides
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('faq')} className="hover:text-emerald-400 transition-colors">
+                  Frequently Asked Questions
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('contact-us')} className="hover:text-emerald-400 transition-colors">
+                  Contact Us
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('report-problem')} className="hover:text-emerald-400 transition-colors">
+                  Report a Problem
+                </button>
+              </li>
+              <li>
+                <button onClick={() => openDoc('become-agent')} className="hover:text-emerald-400 transition-colors font-semibold text-emerald-400 flex items-center gap-1">
                   Become a Verified Agent
                   <ArrowUpRight className="w-3 h-3" />
                 </button>
               </li>
-              <li><span>Agent Verification Guidelines</span></li>
-              <li><span>Hostel Subscription Plans</span></li>
-              <li><span>AI Listing Generator</span></li>
+              <li>
+                <button onClick={() => openDoc('careers')} className="hover:text-emerald-400 transition-colors">
+                  Careers (Coming Soon)
+                </button>
+              </li>
             </ul>
           </div>
+
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center gap-3">
+        <div className="pt-8 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
+          <div className="flex flex-wrap items-center gap-3">
             <p>© 2026 Campora Africa Inc. All rights reserved.</p>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-[10px] font-bold text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>SYSTEM STATUS: OPTIMAL</span>
-            </div>
+            <span className="hidden sm:inline text-neutral-700">•</span>
+            <p className="text-[11px] text-neutral-500">
+              Campora is a technology platform connecting students with verified property agents.
+            </p>
           </div>
           <div className="flex items-center gap-4 text-[11px]">
-            <span>Privacy Policy</span>
-            <span>Terms of Service</span>
-            <span>Safety Guidelines</span>
-            <span>Contact Support</span>
+            <button onClick={() => openDoc('privacy-policy')} className="hover:text-neutral-300">Privacy</button>
+            <button onClick={() => openDoc('terms-and-conditions')} className="hover:text-neutral-300">Terms</button>
+            <button onClick={() => openDoc('verification-policy')} className="hover:text-neutral-300">Verification</button>
+            <button onClick={() => openDoc('contact-us')} className="hover:text-neutral-300">Contact</button>
           </div>
         </div>
+
       </div>
     </footer>
   );

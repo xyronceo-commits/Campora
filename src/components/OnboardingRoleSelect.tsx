@@ -93,14 +93,14 @@ export const OnboardingRoleSelect: React.FC = () => {
                 Tertiary Student
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                Find verified hostels near UNILAG, OAU, ABU, FUTA, UI, LASU & 40+ tertiary institutions across Nigeria. Book free physical viewings & roommate listings.
+                Find verified hostels near UNILAG, OAU, ABU, FUTA, UI, LASU & 40+ tertiary institutions across Nigeria. Book physical viewings & roommate listings.
               </p>
             </div>
 
             <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 font-medium pt-2">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Zero upfront viewing fees</span>
+                <span>Direct physical viewings</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
