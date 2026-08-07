@@ -32,7 +32,7 @@ import {
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { User, UserRole, Listing, InspectionBooking, Review, ReportItem, AgentVerification, NotificationItem } from '../types';
+import { User, UserRole, Listing, InspectionBooking, Review, ReportItem, AgentVerification, NotificationItem, MessageThread, Message } from '../types';
 
 // Initialize Firebase App
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
@@ -411,6 +411,135 @@ export async function submitReportToFirestore(report: Partial<ReportItem>): Prom
   return newDoc.id;
 }
 
+// Real-time Messaging (Threads & Chat Messages) in Firestore
+export function subscribeFirestoreThreads(userId: string, isAgent: boolean, callback: (threads: MessageThread[]) => void) {
+  const ref = collection(db, 'threads');
+  const q = isAgent 
+    ? query(ref, where('agentId', '==', userId))
+    : query(ref, where('studentId', '==', userId));
+
+  return onSnapshot(q, (snapshot) => {
+    const items: MessageThread[] = [];
+    snapshot.forEach((d) => {
+      items.push({ id: d.id, ...d.data() } as MessageThread);
+    });
+    // Sort descending by lastMessageTime
+    items.sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime());
+    callback(items);
+  }, (err) => {
+    console.warn('Threads subscription warning:', err);
+  });
+}
+
+export function subscribeFirestoreMessages(threadId: string, callback: (messages: Message[]) => void) {
+  const ref = collection(db, 'messages');
+  const q = query(ref, where('threadId', '==', threadId), orderBy('timestamp', 'asc'));
+
+  return onSnapshot(q, (snapshot) => {
+    const items: Message[] = [];
+    snapshot.forEach((d) => {
+      items.push({ id: d.id, ...d.data() } as Message);
+    });
+    callback(items);
+  }, (err) => {
+    console.warn('Messages subscription warning:', err);
+  });
+}
+
+export async function createOrGetFirestoreThread(data: {
+  listingId: string;
+  listingTitle: string;
+  studentId: string;
+  studentName: string;
+  agentId: string;
+  agentName: string;
+  initialMessage?: string;
+}): Promise<string> {
+  const threadsRef = collection(db, 'threads');
+  const q = query(
+    threadsRef,
+    where('listingId', '==', data.listingId),
+    where('studentId', '==', data.studentId),
+    where('agentId', '==', data.agentId)
+  );
+  const snap = await getDocs(q);
+
+  let threadId = '';
+  const now = new Date().toISOString();
+
+  if (!snap.empty) {
+    threadId = snap.docs[0].id;
+    if (data.initialMessage) {
+      await updateDoc(doc(db, 'threads', threadId), {
+        lastMessage: data.initialMessage,
+        lastMessageTime: now,
+      });
+    }
+  } else {
+    const newDoc = await addDoc(threadsRef, {
+      listingId: data.listingId,
+      listingTitle: data.listingTitle,
+      studentId: data.studentId,
+      studentName: data.studentName,
+      agentId: data.agentId,
+      agentName: data.agentName,
+      lastMessage: data.initialMessage || 'Started a conversation',
+      lastMessageTime: now,
+      unreadCount: 1,
+    });
+    threadId = newDoc.id;
+    await updateDoc(newDoc, { id: threadId });
+  }
+
+  if (data.initialMessage) {
+    await sendFirestoreMessage({
+      threadId,
+      senderId: data.studentId,
+      senderRole: 'student',
+      text: data.initialMessage,
+    });
+
+    // Notify agent of new message
+    await sendFirestoreNotification({
+      userId: data.agentId,
+      type: 'message',
+      title: `New Message from ${data.studentName}`,
+      body: `Re: ${data.listingTitle}: "${data.initialMessage}"`,
+      read: false,
+    });
+  }
+
+  return threadId;
+}
+
+export async function sendFirestoreMessage(msg: {
+  threadId: string;
+  senderId: string;
+  senderRole: 'student' | 'agent';
+  text: string;
+}): Promise<string> {
+  const messagesRef = collection(db, 'messages');
+  const now = new Date().toISOString();
+  const newDoc = await addDoc(messagesRef, {
+    threadId: msg.threadId,
+    senderId: msg.senderId,
+    senderRole: msg.senderRole,
+    text: msg.text,
+    timestamp: now,
+    read: false,
+  });
+  await updateDoc(newDoc, { id: newDoc.id });
+
+  // Update parent thread lastMessage
+  const threadRef = doc(db, 'threads', msg.threadId);
+  await updateDoc(threadRef, {
+    lastMessage: msg.text,
+    lastMessageTime: now,
+  });
+
+  return newDoc.id;
+}
+
 // Fetch listings directly from Firestore
 export async function fetchFirestoreListings(): Promise<Listing[]> {
   try {
@@ -426,3 +555,4 @@ export async function fetchFirestoreListings(): Promise<Listing[]> {
     return [];
   }
 }
+

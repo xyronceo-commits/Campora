@@ -18,6 +18,7 @@ import { UserProfilePage } from './components/UserProfilePage';
 import { BusinessVerificationPage } from './components/BusinessVerificationPage';
 import { InfoHub } from './components/InfoHub';
 import { AiChatbot } from './components/AiChatbot';
+import { RealtimeChatModal } from './components/RealtimeChatModal';
 import { ToastContainer } from './components/ToastContainer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
@@ -48,6 +49,18 @@ const MainContent: React.FC = () => {
   );
 };
 
+const GlobalChatModalContainer: React.FC = () => {
+  const { isChatModalOpen, setChatModalOpen, chatTargetListing, chatTargetThreadId } = useAuth();
+  return (
+    <RealtimeChatModal
+      isOpen={isChatModalOpen}
+      onClose={() => setChatModalOpen(false)}
+      initialListing={chatTargetListing || undefined}
+      targetThreadId={chatTargetThreadId || undefined}
+    />
+  );
+};
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -66,6 +79,7 @@ export default function App() {
           <ReportModal />
           <AuthModal />
           <UserProfileModal />
+          <GlobalChatModalContainer />
           <AiChatbot />
           <ToastContainer />
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchListings } from '../lib/api';
+import { subscribeFirestoreListings } from '../lib/firebase';
 import { searchAccommodationWithAi } from '../lib/gemini';
 import { ListingCard } from './ListingCard';
 import { Listing, Facility } from '../types';
@@ -109,6 +110,12 @@ export const SearchFilters: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    const unsubscribe = subscribeFirestoreListings(() => {
+      loadData();
+    });
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [
     selectedUniversity, 
     selectedType, 

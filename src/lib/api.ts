@@ -45,10 +45,10 @@ export async function fetchListings(params?: {
     const res = await fetch(url.toString());
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
-    return data.listings || INITIAL_LISTINGS;
+    return data.listings || [];
   } catch (err) {
     console.warn('Falling back to local listings data', err);
-    return INITIAL_LISTINGS;
+    return [];
   }
 }
 
@@ -143,9 +143,9 @@ export async function fetchStudentInspections(studentId: string): Promise<Inspec
     const res = await fetch(`/api/inspections?studentId=${studentId}`);
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
-    return data.inspections || INITIAL_INSPECTIONS;
+    return data.inspections || [];
   } catch (err) {
-    return INITIAL_INSPECTIONS.filter(i => i.studentId === studentId || studentId === 'stud_current');
+    return [];
   }
 }
 
@@ -154,9 +154,9 @@ export async function fetchAgentInspections(agentId: string): Promise<Inspection
     const res = await fetch(`/api/inspections?agentId=${agentId}`);
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
-    return data.inspections || INITIAL_INSPECTIONS;
+    return data.inspections || [];
   } catch (err) {
-    return INITIAL_INSPECTIONS.filter(i => i.agentId === agentId || agentId === 'agent_01');
+    return [];
   }
 }
 

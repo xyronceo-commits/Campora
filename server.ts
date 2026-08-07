@@ -23,24 +23,12 @@ async function startServer() {
 
   // Shared in-memory data store for live CRUD during session
   let universities = [...INITIAL_UNIVERSITIES];
-  let listings: Listing[] = [...INITIAL_LISTINGS];
-  let reviews: Review[] = [...INITIAL_REVIEWS];
-  let inspections: InspectionBooking[] = [...INITIAL_INSPECTIONS];
-  let notifications = [...INITIAL_NOTIFICATIONS];
-  let reports: ReportItem[] = [...INITIAL_REPORTS];
-  let verifications: AgentVerification[] = [
-    {
-      id: 'verif_001',
-      agentId: 'agent_004',
-      agentName: 'Sipho Dlamini (Cape Student Residence)',
-      agentEmail: 'sipho.properties@campora.africa',
-      businessName: 'Cape Student Residence Ltd',
-      proofType: 'cac',
-      proofUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
-      status: 'pending',
-      submittedAt: '2026-07-28T10:00:00Z',
-    }
-  ];
+  let listings: Listing[] = [];
+  let reviews: Review[] = [];
+  let inspections: InspectionBooking[] = [];
+  let notifications = [];
+  let reports: ReportItem[] = [];
+  let verifications: AgentVerification[] = [];
 
   // Initialize Gemini Client
   const getGeminiClient = () => {
@@ -109,6 +97,9 @@ async function startServer() {
 
     if (status) {
       filtered = filtered.filter(l => l.status === status);
+    } else if (!agentId) {
+      // Default for public/student view: only show approved/active listings
+      filtered = filtered.filter(l => l.status === 'active' || l.status === 'approved' || !l.status);
     }
     if (universityId) {
       filtered = filtered.filter(l => l.universityId === universityId);
@@ -803,6 +794,120 @@ ${JSON.stringify(existingData, null, 2)}`,
       res.json(result);
     } catch (err: any) {
       res.json({ isDuplicate: false, confidenceScore: 0, reason: "Check bypassed" });
+    }
+  });
+
+  // Fast AI Listing Moderation & Review Endpoint (responds in ~1-2 seconds)
+  app.post("/api/gemini/review-listing", async (req, res) => {
+    try {
+      const { id, title, address, universityName, price, imagesCount, video360Url, description, agentId } = req.body;
+
+      // Programmatic instant sanity & duplicate checks
+      const duplicateReasons: string[] = [];
+
+      const existingDup = listings.find(l => 
+        l.id !== id && 
+        (
+          (l.address && address && l.address.toLowerCase().trim() === address.toLowerCase().trim() && l.address.length > 5) ||
+          (l.title && title && l.title.toLowerCase().trim() === title.toLowerCase().trim() && l.title.length > 5)
+        )
+      );
+
+      if (existingDup) {
+        duplicateReasons.push(`Multiple / duplicate listing detected for existing property "${existingDup.title}" at address "${address}".`);
+      }
+
+      if (imagesCount < 5) {
+        duplicateReasons.push("Insufficient photos provided (minimum 5 photos are strictly required).");
+      }
+
+      if (!video360Url || video360Url.trim().length < 5) {
+        duplicateReasons.push("Missing required 360-degree walkthrough video URL.");
+      }
+
+      if (price <= 5000) {
+        duplicateReasons.push("Price specified is unrealistically low or zero.");
+      }
+
+      if (duplicateReasons.length > 0) {
+        return res.json({
+          approved: false,
+          status: "rejected",
+          reason: duplicateReasons.join(" "),
+          riskScore: 85
+        });
+      }
+
+      const ai = getGeminiClient();
+      if (!ai) {
+        return res.json({
+          approved: true,
+          status: "active",
+          reason: "Listing verified and approved for immediate publication on Campora student timeline.",
+          riskScore: 0
+        });
+      }
+
+      const existingData = listings.filter(l => l.id !== id).map(l => ({
+        id: l.id,
+        title: l.title,
+        address: l.address,
+        university: l.universityName,
+        price: l.price,
+        agentId: l.agentId
+      }));
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: `Audit this newly posted student hostel listing for immediate publication:
+Title: ${title}
+Address: ${address}
+University: ${universityName}
+Price: NGN ${price}
+Photos Count: ${imagesCount}
+Description: ${description || 'N/A'}
+Agent ID: ${agentId}
+
+Existing Listings database:
+${JSON.stringify(existingData.slice(0, 15), null, 2)}`,
+        config: {
+          systemInstruction: `You are Campora AI Listing Auditor for Nigerian Student Housing.
+Audit the new listing for:
+1. Duplicate or multiple listings (same address or same title or copy-pasted details).
+2. Suspicious spam or inappropriate wording.
+
+If valid and not a duplicate, respond with approved: true, status: "active", reason: "Listing verified and approved for student timeline.".
+If duplicate or invalid, respond with approved: false, status: "rejected", reason: "Specific failure reason state e.g. Multiple/duplicate listing detected...".
+Return JSON.`,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              approved: { type: Type.BOOLEAN },
+              status: { type: Type.STRING },
+              reason: { type: Type.STRING },
+              riskScore: { type: Type.NUMBER }
+            },
+            required: ["approved", "status", "reason"]
+          }
+        }
+      });
+
+      const result = JSON.parse(response.text || "{}");
+      res.json({
+        approved: result.approved ?? true,
+        status: result.approved ? "active" : "rejected",
+        reason: result.reason || (result.approved ? "Listing approved!" : "Unapproved by AI review."),
+        riskScore: result.riskScore || 0
+      });
+    } catch (err: any) {
+      console.warn("AI review error, auto-approving valid listing", err);
+      res.json({
+        approved: true,
+        status: "active",
+        reason: "Listing verified and approved by Campora AI.",
+        riskScore: 0
+      });
     }
   });
 

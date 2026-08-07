@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchStudentInspections, cancelInspection, fetchListings } from '../lib/api';
+import { subscribeFirestoreInspections, subscribeFirestoreListings } from '../lib/firebase';
+import { getGoogleCalendarUrl, downloadIcsFile } from '../lib/calendar';
 import { InspectionBooking, Listing, RoommatePost } from '../types';
 import { ListingCard } from './ListingCard';
 import { UserProfileSection } from './UserProfileSection';
@@ -14,7 +16,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 export const StudentDashboard: React.FC = () => {
-  const { user, savedListingIds, setSelectedListing, addToast } = useAuth();
+  const { user, savedListingIds, setSelectedListing, openChatWithListing, addToast } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'inspections' | 'saved_compare' | 'roommates' | 'calculator' | 'profile'>('inspections');
   const [inspections, setInspections] = useState<InspectionBooking[]>([]);
@@ -103,6 +105,24 @@ export const StudentDashboard: React.FC = () => {
 
   useEffect(() => {
     loadStudentData();
+
+    let unSubIns: (() => void) | undefined;
+    let unSubList: (() => void) | undefined;
+
+    if (user?.id) {
+      unSubIns = subscribeFirestoreInspections(user.id, false, (items) => {
+        if (items && items.length > 0) setInspections(items);
+      });
+    }
+
+    unSubList = subscribeFirestoreListings(() => {
+      loadStudentData();
+    });
+
+    return () => {
+      if (unSubIns) unSubIns();
+      if (unSubList) unSubList();
+    };
   }, [user, savedListingIds]);
 
   const handleCancelInspection = async (id: string) => {
@@ -348,19 +368,72 @@ export const StudentDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Agent Contact Card */}
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700/80 text-xs space-y-2">
+                  {/* Agent Contact & Calendar Sync Card */}
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700/80 text-xs space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-slate-700 dark:text-slate-300">Agent: {ins.agentName}</span>
-                      <a
-                        href={`https://wa.me/${ins.agentPhone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(ins.agentName)},%20I%20have%20an%20inspection%20booked%20for%20${encodeURIComponent(ins.listingTitle)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1"
-                      >
-                        <Phone className="w-3 h-3" /> WhatsApp / Call
-                      </a>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            openChatWithListing({
+                              id: ins.listingId,
+                              title: ins.listingTitle,
+                              agentId: ins.agentId,
+                              agentName: ins.agentName,
+                            });
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors flex items-center gap-1 text-[11px]"
+                        >
+                          <MessageSquare className="w-3 h-3 text-emerald-400" /> Chat Live
+                        </button>
+                        <a
+                          href={`https://wa.me/${ins.agentPhone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(ins.agentName)},%20I%20have%20an%20inspection%20booked%20for%20${encodeURIComponent(ins.listingTitle)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1 text-[11px]"
+                        >
+                          <Phone className="w-3 h-3" /> WhatsApp
+                        </a>
+                      </div>
                     </div>
+
+                    {/* Google Calendar & .ics Sync Row */}
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-200/50 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-emerald-500" /> Calendar Sync
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={getGoogleCalendarUrl({
+                            title: ins.listingTitle,
+                            description: `Hostel Inspection with Agent ${ins.agentName}. Phone: ${ins.agentPhone}`,
+                            location: ins.listingTitle,
+                            startDate: ins.date,
+                            timeSlot: ins.timeSlot,
+                          })}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 text-[10px] font-extrabold flex items-center gap-1"
+                        >
+                          + Google Calendar
+                        </a>
+                        <button
+                          onClick={() => {
+                            downloadIcsFile({
+                              title: ins.listingTitle,
+                              description: `Hostel Inspection with Agent ${ins.agentName}. Phone: ${ins.agentPhone}`,
+                              location: ins.listingTitle,
+                              startDate: ins.date,
+                              timeSlot: ins.timeSlot,
+                            });
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 text-[10px] font-extrabold"
+                        >
+                          Download .ics
+                        </button>
+                      </div>
+                    </div>
+
                     {ins.note && <p className="text-slate-500 dark:text-slate-400 text-[11px] italic">"{ins.note}"</p>}
                   </div>
 

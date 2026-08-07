@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchListings } from '../lib/api';
+import { subscribeFirestoreListings } from '../lib/firebase';
 import { searchAccommodationWithAi } from '../lib/gemini';
 import { ListingCard } from './ListingCard';
 import { Listing } from '../types';
@@ -22,6 +23,14 @@ export const LandingPage: React.FC = () => {
     fetchListings({})
       .then(data => setFeaturedListings(data.slice(0, 6)))
       .catch(() => {});
+
+    const unsubscribe = subscribeFirestoreListings((items) => {
+      setFeaturedListings(items.slice(0, 6));
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const handleAiSubmit = async (e: React.FormEvent) => {
@@ -228,11 +237,34 @@ export const LandingPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {featuredListings.map(listing => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </div>
+        {featuredListings.length === 0 ? (
+          <div className="p-10 text-center rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3 col-span-full">
+            <Building2 className="w-10 h-10 text-slate-400 mx-auto" />
+            <h4 className="font-bold text-base text-slate-800 dark:text-slate-200">No Live Listings Uploaded Yet</h4>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              Real-time listings uploaded by verified agents will appear here instantly on the student feed.
+            </p>
+            <button
+              onClick={() => {
+                if (!user) {
+                  setAuthModalTab('agent_signup');
+                  setAuthModalOpen(true);
+                } else {
+                  setActiveView('agent_dashboard');
+                }
+              }}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition"
+            >
+              Post a Property Listing
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {featuredListings.map(listing => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 4. COMPARISON TABLE - Traditional vs Campora (Clear, practical, no hype) */}

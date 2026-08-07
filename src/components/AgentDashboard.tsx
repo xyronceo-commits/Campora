@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAgentListings, fetchAgentInspections, updateInspectionStatus, createListing } from '../lib/api';
-import { saveListingToFirestore, fetchFirestoreListings } from '../lib/firebase';
-import { generateListingDescription } from '../lib/gemini';
+import { saveListingToFirestore, fetchFirestoreListings, subscribeFirestoreInspections, subscribeFirestoreListings, sendFirestoreNotification, updateListingInFirestore } from '../lib/firebase';
+import { generateListingDescription, reviewListingWithAi } from '../lib/gemini';
+import { getGoogleCalendarUrl, downloadIcsFile } from '../lib/calendar';
 import { Listing, InspectionBooking, Facility } from '../types';
 import { UserProfileSection } from './UserProfileSection';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
@@ -10,12 +11,12 @@ import {
   Building2, Plus, Calendar, ShieldCheck, Sparkles, Check, Clock, Eye, Phone, Mail,
   MapPin, CheckCircle, AlertTriangle, Send, RefreshCw, ToggleLeft, ToggleRight, Trash2,
   DollarSign, Users, TrendingUp, Award, Layers, ChevronRight, FileText, CheckCircle2, X,
-  Upload, Image, Video, HardDrive, FolderUp, FileVideo, Camera
+  Upload, Image, Video, HardDrive, FolderUp, FileVideo, Camera, MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const AgentDashboard: React.FC = () => {
-  const { user, addToast, agentActiveTab: activeTab, setAgentActiveTab: setActiveTab } = useAuth();
+  const { user, addToast, agentActiveTab: activeTab, setAgentActiveTab: setActiveTab, openChatWithListing } = useAuth();
   const [agentListings, setAgentListings] = useState<Listing[]>([]);
   const [inspections, setInspections] = useState<InspectionBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,6 +196,27 @@ export const AgentDashboard: React.FC = () => {
 
   useEffect(() => {
     loadAgentData();
+
+    let unSubIns: (() => void) | undefined;
+    let unSubList: (() => void) | undefined;
+
+    if (user?.id) {
+      unSubIns = subscribeFirestoreInspections(user.id, true, (items) => {
+        if (items && items.length >= 0) setInspections(items);
+      });
+    }
+
+    unSubList = subscribeFirestoreListings((items) => {
+      if (user?.id) {
+        const myItems = items.filter(l => l.agentId === user.id);
+        if (myItems.length >= 0) setAgentListings(myItems);
+      }
+    });
+
+    return () => {
+      if (unSubIns) unSubIns();
+      if (unSubList) unSubList();
+    };
   }, [user]);
 
   const handleGenerateAiDescription = async () => {
@@ -260,9 +282,13 @@ export const AgentDashboard: React.FC = () => {
     }
 
     setLoading(true);
+    addToast('Publishing Listing...', 'Campora AI is auditing your listing in real-time... ⚡', 'info');
+
     try {
       const selectedUni = INITIAL_UNIVERSITIES.find(u => u.id === wizardUniId)!;
-      const newListing = await createListing({
+      
+      // Step 1: Create listing with initial pending_review status
+      const initialListingData: Partial<Listing> = {
         title: wizardTitle,
         type: wizardType,
         accommodationTypeName: wizardAccomTypeName,
@@ -291,16 +317,118 @@ export const AgentDashboard: React.FC = () => {
         agentAvatar: user?.avatar || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80',
         coordinates: selectedUni.coordinates,
         address: wizardAddress,
+        status: 'pending_review',
+      };
+
+      const newListing = await createListing(initialListingData);
+
+      // Step 2: Instant AI Review (< 2 seconds)
+      const reviewResult = await reviewListingWithAi({
+        id: newListing.id,
+        title: wizardTitle,
+        address: wizardAddress,
+        universityName: selectedUni.name,
+        price: Number(wizardPrice),
+        imagesCount: wizardImages.length,
+        video360Url: wizardVideo360Url,
+        description: wizardDescription,
+        agentId: user?.id || 'agent_01'
       });
 
-      setAgentListings(prev => [newListing, ...prev]);
-      await saveListingToFirestore(newListing);
+      const finalStatus = reviewResult.approved ? 'active' : 'rejected';
+      const updatedListing: Listing = {
+        ...newListing,
+        status: finalStatus as any,
+      };
+
+      setAgentListings(prev => [updatedListing, ...prev]);
+      await saveListingToFirestore(updatedListing);
       setActiveTab('listings');
-      addToast('Hostel Published Live! 🏠', 'Your accommodation is now stored in Firebase database and live for students.');
+
+      // Step 3: Trigger instant notification to Agent
+      if (reviewResult.approved) {
+        addToast(
+          'Listing Approved! 🎉',
+          'Your accommodation passed AI verification and is now live on student timelines.',
+          'success'
+        );
+        await sendFirestoreNotification({
+          userId: user?.id || 'agent_01',
+          type: 'system',
+          title: 'Listing Approved! 🎉',
+          body: `Your hostel listing "${wizardTitle}" has been verified by Campora AI and is now live on student timelines!`,
+          read: false,
+        });
+      } else {
+        addToast(
+          'Listing Unapproved ⚠️',
+          `Reason: ${reviewResult.reason}`,
+          'error'
+        );
+        await sendFirestoreNotification({
+          userId: user?.id || 'agent_01',
+          type: 'system',
+          title: 'Listing Unapproved ⚠️',
+          body: `Your hostel listing "${wizardTitle}" was unapproved by AI review. Reason: ${reviewResult.reason}`,
+          read: false,
+        });
+      }
+
+      // Reset form fields
+      setWizardTitle('');
+      setWizardAccomTypeName('');
+      setWizardAddress('');
+      setWizardPrice('250000');
+      setWizardImages([]);
+      setWizardVideo360Url('');
+      setWizardDescription('');
     } catch (err) {
       addToast('Error', 'Failed to publish listing', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReReviewListing = async (listing: Listing) => {
+    addToast('Re-assessing Listing...', 'Campora AI is auditing your listing... ⚡', 'info');
+    try {
+      const result = await reviewListingWithAi({
+        id: listing.id,
+        title: listing.title,
+        address: listing.address,
+        universityName: listing.universityName,
+        price: listing.price,
+        imagesCount: listing.images.length,
+        video360Url: listing.video360Url || listing.videoUrl,
+        description: listing.description,
+        agentId: user?.id || listing.agentId
+      });
+
+      const newStatus = result.approved ? 'active' : 'rejected';
+      setAgentListings(prev => prev.map(l => l.id === listing.id ? { ...l, status: newStatus as any } : l));
+      await updateListingInFirestore(listing.id, { status: newStatus as any });
+
+      if (result.approved) {
+        addToast('Listing Approved! 🎉', 'Your listing passed AI review and is now live for students.', 'success');
+        await sendFirestoreNotification({
+          userId: user?.id || 'agent_01',
+          type: 'system',
+          title: 'Listing Approved! 🎉',
+          body: `Your hostel listing "${listing.title}" passed AI review and is now live on student timelines!`,
+          read: false,
+        });
+      } else {
+        addToast('Listing Unapproved ⚠️', `Reason: ${result.reason}`, 'error');
+        await sendFirestoreNotification({
+          userId: user?.id || 'agent_01',
+          type: 'system',
+          title: 'Listing Unapproved ⚠️',
+          body: `Your listing "${listing.title}" was unapproved by AI review. Reason: ${result.reason}`,
+          read: false,
+        });
+      }
+    } catch (err) {
+      addToast('Error', 'Failed to re-review listing', 'error');
     }
   };
 
@@ -559,14 +687,32 @@ export const AgentDashboard: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                        listing.isOccupied
+                        listing.status === 'rejected'
+                          ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                          : listing.status === 'pending_review'
+                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                          : listing.isOccupied
                           ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                           : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                       }`}>
-                        {listing.isOccupied ? 'Fully Booked' : 'Active'}
+                        {listing.status === 'rejected'
+                          ? 'Unapproved (AI)'
+                          : listing.status === 'pending_review'
+                          ? 'AI Reviewing...'
+                          : listing.isOccupied
+                          ? 'Fully Booked'
+                          : 'Live on Feed'}
                       </span>
                     </td>
                     <td className="p-4 text-right space-x-2">
+                      {listing.status === 'rejected' && (
+                        <button
+                          onClick={() => handleReReviewListing(listing)}
+                          className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold transition inline-flex items-center gap-1"
+                        >
+                          <Sparkles className="w-3 h-3" /> Re-audit AI
+                        </button>
+                      )}
                       <button
                         onClick={() => handleToggleOccupancy(listing.id)}
                         className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200"
@@ -1187,21 +1333,74 @@ export const AgentDashboard: React.FC = () => {
 
                   <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{ins.listingTitle}</h4>
 
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 text-xs space-y-1">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 text-xs space-y-2">
                     <p className="font-bold text-slate-800 dark:text-slate-200">Student: {ins.studentName}</p>
                     <p className="text-slate-500">Phone: {ins.studentPhone} • Email: {ins.studentEmail}</p>
                     <p className="text-emerald-600 font-bold">Appointment: {ins.date} @ {ins.timeSlot}</p>
+
+                    {/* Google Calendar & .ics export row */}
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-emerald-500" /> Sync Calendar
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={getGoogleCalendarUrl({
+                            title: `Inspection with Student ${ins.studentName}: ${ins.listingTitle}`,
+                            description: `Student Inspection Booking for ${ins.listingTitle}. Student Phone: ${ins.studentPhone}, Email: ${ins.studentEmail}`,
+                            location: ins.listingTitle,
+                            startDate: ins.date,
+                            timeSlot: ins.timeSlot,
+                          })}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 text-[10px] font-extrabold flex items-center gap-1"
+                        >
+                          + Google Calendar
+                        </a>
+                        <button
+                          onClick={() => {
+                            downloadIcsFile({
+                              title: `Inspection with Student ${ins.studentName}: ${ins.listingTitle}`,
+                              description: `Student Inspection Booking for ${ins.listingTitle}. Student Phone: ${ins.studentPhone}, Email: ${ins.studentEmail}`,
+                              location: ins.listingTitle,
+                              startDate: ins.date,
+                              timeSlot: ins.timeSlot,
+                            });
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 text-[10px] font-extrabold"
+                        >
+                          Download .ics
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
-                    <a
-                      href={`https://wa.me/${ins.studentPhone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(ins.studentName)},%20I%20am%20confirming%20your%20inspection%20for%20${encodeURIComponent(ins.listingTitle)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 flex items-center gap-1"
-                    >
-                      <Phone className="w-3.5 h-3.5" /> WhatsApp Student
-                    </a>
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          openChatWithListing({
+                            id: ins.listingId,
+                            title: ins.listingTitle,
+                            agentId: user?.id || ins.agentId,
+                            agentName: user?.name || ins.agentName,
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 flex items-center gap-1"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 text-emerald-400" /> Chat Live
+                      </button>
+
+                      <a
+                        href={`https://wa.me/${ins.studentPhone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(ins.studentName)},%20I%20am%20confirming%20your%20inspection%20for%20${encodeURIComponent(ins.listingTitle)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 flex items-center gap-1"
+                      >
+                        <Phone className="w-3.5 h-3.5" /> WhatsApp
+                      </a>
+                    </div>
 
                     {ins.status === 'pending' && (
                       <button

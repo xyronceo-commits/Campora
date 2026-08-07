@@ -73,6 +73,12 @@ interface AuthContextType {
   setReportModalListing: (listing: Listing | null) => void;
   agentActiveTab: 'listings' | 'add_wizard' | 'special_requests' | 'phone_requests' | 'crm_inspections' | 'analytics' | 'verification';
   setAgentActiveTab: (tab: 'listings' | 'add_wizard' | 'special_requests' | 'phone_requests' | 'crm_inspections' | 'analytics' | 'verification') => void;
+  isChatModalOpen: boolean;
+  setChatModalOpen: (open: boolean) => void;
+  chatTargetListing: { id: string; title: string; agentId: string; agentName: string } | null;
+  chatTargetThreadId: string | null;
+  openChatWithListing: (listing: { id: string; title: string; agentId: string; agentName: string }) => void;
+  openChatThread: (threadId: string) => void;
   requestNotificationPermission: () => Promise<void>;
   isFirebaseConnected: boolean;
 }
@@ -149,6 +155,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [inspectionModalListing, setInspectionModalListing] = useState<Listing | null>(null);
   const [reportModalListing, setReportModalListing] = useState<Listing | null>(null);
   const [agentActiveTab, setAgentActiveTab] = useState<'listings' | 'add_wizard' | 'special_requests' | 'phone_requests' | 'crm_inspections' | 'analytics' | 'verification'>('listings');
+
+  const [isChatModalOpen, setChatModalOpen] = useState(false);
+  const [chatTargetListing, setChatTargetListing] = useState<{ id: string; title: string; agentId: string; agentName: string } | null>(null);
+  const [chatTargetThreadId, setChatTargetThreadId] = useState<string | null>(null);
+
+  const openChatWithListing = (listing: { id: string; title: string; agentId: string; agentName: string }) => {
+    setChatTargetListing(listing);
+    setChatTargetThreadId(null);
+    setChatModalOpen(true);
+  };
+
+  const openChatThread = (threadId: string) => {
+    setChatTargetThreadId(threadId);
+    setChatTargetListing(null);
+    setChatModalOpen(true);
+  };
 
   useEffect(() => {
     localStorage.setItem('campora_saved_listings', JSON.stringify(savedListingIds));
@@ -560,6 +582,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setReportModalListing,
         agentActiveTab,
         setAgentActiveTab,
+        isChatModalOpen,
+        setChatModalOpen,
+        chatTargetListing,
+        chatTargetThreadId,
+        openChatWithListing,
+        openChatThread,
         requestNotificationPermission,
         isFirebaseConnected,
       }}

@@ -125,7 +125,7 @@ export interface Listing {
   isFeatured: boolean;
   isPaused: boolean;
   isOccupied: boolean;
-  status: 'active' | 'pending_approval' | 'flagged' | 'paused';
+  status: 'active' | 'approved' | 'pending_review' | 'pending_approval' | 'rejected' | 'flagged' | 'paused';
   viewsCount: number;
   enquiriesCount: number;
   savesCount: number;
@@ -197,7 +197,7 @@ export interface Message {
 export interface NotificationItem {
   id: string;
   userId: string;
-  type: 'inspection_update' | 'new_listing' | 'price_change' | 'message' | 'announcement' | 'agent_verification';
+  type: 'inspection_update' | 'new_listing' | 'price_change' | 'message' | 'announcement' | 'agent_verification' | 'system';
   title: string;
   body: string;
   read: boolean;

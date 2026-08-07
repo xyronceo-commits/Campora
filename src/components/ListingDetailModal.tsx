@@ -18,6 +18,7 @@ export const ListingDetailModal: React.FC = () => {
     toggleSaveListing, 
     setInspectionModalListing, 
     setReportModalListing,
+    openChatWithListing,
     user,
     addToast
   } = useAuth();
@@ -532,14 +533,31 @@ export const ListingDetailModal: React.FC = () => {
                     </a>
                   </div>
 
-                  {/* Primary CTA Button */}
-                  <button
-                    onClick={() => setInspectionModalListing(selectedListing)}
-                    className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
-                  >
-                    <Calendar className="w-4 h-4" />
-                    Book Physical Inspection
-                  </button>
+                  {/* Primary CTA Buttons */}
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        openChatWithListing({
+                          id: selectedListing.id,
+                          title: selectedListing.title,
+                          agentId: selectedListing.agentId,
+                          agentName: selectedListing.agentName
+                        });
+                      }}
+                      className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm transition-colors flex items-center justify-center gap-2 shadow-md"
+                    >
+                      <MessageSquare className="w-4 h-4 text-emerald-400" />
+                      Message Agent Live
+                    </button>
+
+                    <button
+                      onClick={() => setInspectionModalListing(selectedListing)}
+                      className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Book Physical Inspection
+                    </button>
+                  </div>
 
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center leading-normal">
                     <Lock className="w-3 h-3 inline mr-1 text-emerald-500" />
