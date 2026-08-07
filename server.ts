@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import {
@@ -1008,7 +1009,7 @@ Office Address: ${officeAddress || 'Not provided'}`,
     }
   });
 
-  // Vite Integration
+  // Vite Integration & Dynamic HTML Meta Handling
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -1017,9 +1018,30 @@ Office Address: ${officeAddress || 'Not provided'}`,
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    const indexPath = path.join(distPath, 'index.html');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      try {
+        const host = req.get('x-forwarded-host') || req.get('host') || 'campora.app';
+        const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+        const baseUrl = `${protocol}://${host}`;
+        const currentUrl = `${baseUrl}${req.originalUrl || ''}`;
+        
+        let html = fs.readFileSync(indexPath, 'utf-8');
+        html = html
+          .replaceAll('content="/og-image.png"', `content="${baseUrl}/og-image.png"`)
+          .replaceAll('href="/favicon', `href="${baseUrl}/favicon`);
+
+        // Inject canonical & og:url if not present
+        if (!html.includes('og:url')) {
+          html = html.replace('</head>', `  <meta property="og:url" content="${currentUrl}" />\n    <link rel="canonical" href="${currentUrl}" />\n  </head>`);
+        }
+
+        res.set('Content-Type', 'text/html');
+        res.send(html);
+      } catch (err) {
+        res.sendFile(indexPath);
+      }
     });
   }
 

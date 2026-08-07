@@ -1,0 +1,78 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'>
+  <defs>
+    <linearGradient id='bg' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#0f172a'/>
+      <stop offset='50%' stop-color='#1e293b'/>
+      <stop offset='100%' stop-color='#0f172a'/>
+    </linearGradient>
+    <linearGradient id='emerald-grad' x1='0%' y1='0%' x2='100%' y2='0%'>
+      <stop offset='0%' stop-color='#10b981'/>
+      <stop offset='100%' stop-color='#34d399'/>
+    </linearGradient>
+    <filter id='shadow' x='-10%' y='-10%' width='120%' height='120%'>
+      <feDropShadow dx='0' dy='12' stdDeviation='16' flood-color='#000000' flood-opacity='0.4'/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width='1200' height='630' fill='url(#bg)'/>
+  
+  <!-- Subtle decorative grid & glowing radial accents -->
+  <circle cx='200' cy='150' r='300' fill='#10b981' opacity='0.12' filter='blur(60px)' />
+  <circle cx='1000' cy='500' r='250' fill='#0284c7' opacity='0.10' filter='blur(60px)' />
+  
+  <!-- Card Container -->
+  <rect x='80' y='60' width='1040' height='510' rx='32' fill='#1e293b' fill-opacity='0.6' stroke='#334155' stroke-width='2' filter='url(#shadow)' />
+  
+  <!-- Content Layout -->
+  <!-- Logo Section -->
+  <g transform='translate(130, 110)'>
+    <!-- Location Pin Badge Icon -->
+    <path fill='#10b981' d='M 100 10 C 58 10 24 44 24 86 C 24 136 90 197 97 203 C 99 205 101 205 103 203 C 110 197 176 136 176 86 C 176 44 142 10 100 10 Z' />
+    <!-- White Arch -->
+    <path fill='none' stroke='#ffffff' stroke-width='8' stroke-linecap='round' d='M 59 87 A 41 41 0 0 1 141 87' />
+    <!-- Roof Gable -->
+    <path fill='#ffffff' d='M 100 48 L 140 80 L 133 86 L 100 60 L 67 86 L 60 80 Z' />
+    <!-- Lower Roof -->
+    <path fill='#ffffff' d='M 100 64 L 127 86 L 121 91 L 100 74 L 79 91 L 73 86 Z' />
+    <!-- Chimney -->
+    <rect fill='#ffffff' x='116' y='57' width='7' height='14' rx='1' />
+  </g>
+  
+  <!-- Text Brand Info -->
+  <g transform='translate(350, 150)'>
+    <!-- Badge -->
+    <rect x='0' y='0' width='230' height='36' rx='18' fill='#064e3b' stroke='#10b981' stroke-width='1.5' />
+    <text x='115' y='23' font-family='system-ui, -apple-system, sans-serif' font-weight='800' font-size='13' fill='#34d399' text-anchor='middle' letter-spacing='1.5'>VERIFIED STUDENT HOUSING</text>
+    
+    <!-- Main Title -->
+    <text x='0' y='95' font-family='system-ui, -apple-system, sans-serif' font-weight='900' font-size='68' fill='#ffffff' letter-spacing='2'>Campora</text>
+    
+    <!-- Tagline / Description -->
+    <text x='0' y='145' font-family='system-ui, -apple-system, sans-serif' font-weight='500' font-size='22' fill='#94a3b8'>Discover, compare, and book verified hostels</text>
+    <text x='0' y='178' font-family='system-ui, -apple-system, sans-serif' font-weight='500' font-size='22' fill='#94a3b8'>&amp; apartments near your campus with ease.</text>
+    
+    <!-- Feature Highlights -->
+    <g transform='translate(0, 230)'>
+      <!-- Pill 1 -->
+      <rect x='0' y='0' width='180' height='40' rx='20' fill='#0f172a' stroke='#334155' />
+      <circle cx='20' cy='20' r='6' fill='#10b981' />
+      <text x='36' y='25' font-family='system-ui, -apple-system, sans-serif' font-weight='700' font-size='14' fill='#e2e8f0'>Instant Booking</text>
+      
+      <!-- Pill 2 -->
+      <rect x='195' y='0' width='180' height='40' rx='20' fill='#0f172a' stroke='#334155' />
+      <circle cx='215' cy='20' r='6' fill='#38bdf8' />
+      <text x='231' y='25' font-family='system-ui, -apple-system, sans-serif' font-weight='700' font-size='14' fill='#e2e8f0'>AI Verified Agents</text>
+      
+      <!-- Pill 3 -->
+      <rect x='390' y='0' width='180' height='40' rx='20' fill='#0f172a' stroke='#334155' />
+      <circle cx='410' cy='20' r='6' fill='#a855f7' />
+      <text x='426' y='25' font-family='system-ui, -apple-system, sans-serif' font-weight='700' font-size='14' fill='#e2e8f0'>360° Virtual Tours</text>
+    </g>
+  </g>
+  
+  <!-- Footer Bar -->
+  <rect x='80' y='500' width='1040' height='70' rx='0' fill='#0f172a' fill-opacity='0.8' />
+  <text x='130' y='542' font-family='system-ui, -apple-system, sans-serif' font-weight='700' font-size='16' fill='#64748b'>campora.app</text>
+  <text x='1070' y='542' font-family='system-ui, -apple-system, sans-serif' font-weight='700' font-size='16' fill='#10b981' text-anchor='end'>Verified Housing Near Campus</text>
+</svg>
