@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { uploadFileToFirebaseStorage } from '../lib/firebase';
+import { submitAgentVerification } from '../lib/api';
+import { AgentPhotoUploader } from './AgentPhotoUploader';
 import { 
   ShieldCheck, Building2, Upload, FileText, CheckCircle2, ArrowRight, 
   AlertCircle, Shield, RefreshCw, Home, Sparkles, Check
@@ -15,6 +17,11 @@ export const BusinessVerificationPage: React.FC = () => {
   const [officeAddress, setOfficeAddress] = useState('');
   const [uploadedDocName, setUploadedDocName] = useState<string | null>(null);
   const [docFile, setDocFile] = useState<File | null>(null);
+
+  // Agent identity photo state
+  const [agentPhotoUrl, setAgentPhotoUrl] = useState<string | null>(user?.avatar || user?.agentPhotoUrl || null);
+  const [agentPhotoFile, setAgentPhotoFile] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const [uploading, setUploading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -36,8 +43,16 @@ export const BusinessVerificationPage: React.FC = () => {
       return;
     }
 
+    if (!agentPhotoUrl) {
+      setPhotoError('Please take or upload a clear picture of yourself (unblurred, face visible, no mask). This is required for agent identity verification.');
+      addToast('Photo Required 📷', 'Please take or upload a clear picture of yourself for agent verification.', 'warning');
+      return;
+    }
+
+    setPhotoError(null);
     setUploading(true);
     let documentUrl = '';
+    let finalPhotoUrl = agentPhotoUrl;
 
     try {
       if (docFile && user) {
@@ -46,15 +61,21 @@ export const BusinessVerificationPage: React.FC = () => {
         documentUrl = await uploadFileToFirebaseStorage(path, docFile);
       }
 
-      addToast('AI Validating Business Details...', 'Reviewing business name & proof of business', 'info');
+      if (agentPhotoFile && user) {
+        addToast('Uploading Photo...', 'Saving verification photo of agent', 'info');
+        const photoPath = `verifications/photos/${user.id}_${Date.now()}.jpg`;
+        finalPhotoUrl = await uploadFileToFirebaseStorage(photoPath, agentPhotoFile);
+      }
+
+      addToast('AI Validating Verification Details...', 'Checking business profile & face photo clarity', 'info');
 
       // Call AI Verification backend endpoint
-      let aiResultReason = 'Verified Agency & Business Profile';
+      let aiResultReason = 'Verified Agency & Agent Identity Photo';
       try {
         const aiRes = await fetch('/api/gemini/verify-business', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessName, proofType, officeAddress }),
+          body: JSON.stringify({ businessName, proofType, officeAddress, agentPhotoUrl: finalPhotoUrl }),
         });
         if (aiRes.ok) {
           const aiData = await aiRes.json();
@@ -66,18 +87,34 @@ export const BusinessVerificationPage: React.FC = () => {
         console.warn('AI Verification endpoint error, falling back:', e);
       }
 
+      // Record verification submission
+      if (user) {
+        await submitAgentVerification({
+          agentId: user.id,
+          agentName: user.name,
+          agentEmail: user.email,
+          businessName,
+          proofType,
+          proofUrl: documentUrl || uploadedDocName || undefined,
+          agentPhotoUrl: finalPhotoUrl || undefined,
+          officeAddress
+        });
+      }
+
       updateProfile({
         isVerifiedAgent: true,
         verificationStatus: 'verified',
         businessName,
         proofType,
         proofUrl: documentUrl || uploadedDocName || undefined,
+        agentPhotoUrl: finalPhotoUrl || undefined,
+        avatar: finalPhotoUrl || user?.avatar,
         officeAddress,
       });
 
       setIsSubmitted(true);
       addToast(
-        'Agent Business Registered! 🎉', 
+        'Agent Business & Photo Verified! 🎉', 
         `${aiResultReason}`, 
         'success'
       );
@@ -89,6 +126,7 @@ export const BusinessVerificationPage: React.FC = () => {
         verificationStatus: 'verified',
         businessName,
         proofType,
+        agentPhotoUrl: finalPhotoUrl || undefined,
         officeAddress
       });
       setIsSubmitted(true);
@@ -180,6 +218,21 @@ export const BusinessVerificationPage: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmitVerification} className="space-y-6">
               
+              {/* Agent Identity Photo Section (Mandatory Verification Requirement) */}
+              <AgentPhotoUploader
+                photoUrl={agentPhotoUrl}
+                onPhotoSelected={(url, file) => {
+                  setAgentPhotoUrl(url);
+                  if (file) setAgentPhotoFile(file);
+                  setPhotoError(null);
+                }}
+                onPhotoCleared={() => {
+                  setAgentPhotoUrl(null);
+                  setAgentPhotoFile(null);
+                }}
+                error={photoError}
+              />
+
               {/* Business Name */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">

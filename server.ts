@@ -387,6 +387,7 @@ async function startServer() {
       businessName: req.body.businessName || "Property Agent",
       proofType: req.body.proofType || "banner",
       proofUrl: req.body.proofUrl || "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
+      agentPhotoUrl: req.body.agentPhotoUrl || req.body.agentPhoto || undefined,
       officeAddress: req.body.officeAddress,
       status: "pending",
       submittedAt: new Date().toISOString()

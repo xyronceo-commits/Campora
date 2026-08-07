@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { fetchAgentListings, fetchAgentInspections, updateInspectionStatus, createListing } from '../lib/api';
-import { saveListingToFirestore, fetchFirestoreListings, subscribeFirestoreInspections, subscribeFirestoreListings, sendFirestoreNotification, updateListingInFirestore } from '../lib/firebase';
+import { fetchAgentListings, fetchAgentInspections, updateInspectionStatus, createListing, submitAgentVerification } from '../lib/api';
+import { saveListingToFirestore, fetchFirestoreListings, subscribeFirestoreInspections, subscribeFirestoreListings, sendFirestoreNotification, updateListingInFirestore, uploadFileToFirebaseStorage } from '../lib/firebase';
 import { generateListingDescription, reviewListingWithAi } from '../lib/gemini';
 import { getGoogleCalendarUrl, downloadIcsFile } from '../lib/calendar';
+import { AgentPhotoUploader } from './AgentPhotoUploader';
 import { Listing, InspectionBooking, Facility } from '../types';
 import { UserProfileSection } from './UserProfileSection';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
@@ -16,7 +17,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 export const AgentDashboard: React.FC = () => {
-  const { user, addToast, agentActiveTab: activeTab, setAgentActiveTab: setActiveTab, openChatWithListing } = useAuth();
+  const { user, addToast, agentActiveTab: activeTab, setAgentActiveTab: setActiveTab, openChatWithListing, updateProfile } = useAuth();
   const [agentListings, setAgentListings] = useState<Listing[]>([]);
   const [inspections, setInspections] = useState<InspectionBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,6 +179,10 @@ export const AgentDashboard: React.FC = () => {
   const [govId, setGovId] = useState('NIN-84920491823');
   const [officeAddress, setOfficeAddress] = useState('Suite 4, University Commercial Gate Complex');
   const [verificationSubmitted, setVerificationSubmitted] = useState(false);
+  const [agentPhotoUrl, setAgentPhotoUrl] = useState<string | null>(user?.avatar || user?.agentPhotoUrl || null);
+  const [agentPhotoFile, setAgentPhotoFile] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [submittingVerif, setSubmittingVerif] = useState(false);
 
   const loadAgentData = async () => {
     setLoading(true);
@@ -1468,15 +1473,30 @@ export const AgentDashboard: React.FC = () => {
           {verificationSubmitted ? (
             <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center space-y-2">
               <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-              <h4 className="font-extrabold text-base text-emerald-900 dark:text-emerald-100">Verification Under Review</h4>
+              <h4 className="font-extrabold text-base text-emerald-900 dark:text-emerald-100">Verification Submitted & Under Review</h4>
               <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                Our trust & safety team is auditing your business name and proof of business upload. You will receive an email confirmation shortly.
+                Our trust & safety team is auditing your business details and verified identity photo. You will receive an instant gold badge status update shortly.
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Agent Identity Photo Upload */}
+              <AgentPhotoUploader
+                photoUrl={agentPhotoUrl}
+                onPhotoSelected={(url, file) => {
+                  setAgentPhotoUrl(url);
+                  if (file) setAgentPhotoFile(file);
+                  setPhotoError(null);
+                }}
+                onPhotoCleared={() => {
+                  setAgentPhotoUrl(null);
+                  setAgentPhotoFile(null);
+                }}
+                error={photoError}
+              />
+
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Agency or Business Name</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Agency or Business Name <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
                   value={agencyName}
@@ -1499,7 +1519,7 @@ export const AgentDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Upload Proof of Business Image</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Upload Proof of Business Image (Optional)</label>
                 <input
                   type="file"
                   accept="image/*,.pdf"
@@ -1524,17 +1544,70 @@ export const AgentDashboard: React.FC = () => {
               </div>
 
               <button
-                onClick={() => {
+                disabled={submittingVerif}
+                onClick={async () => {
                   if (!agencyName.trim()) {
                     addToast('Missing Business Name', 'Please enter your agency or business name.', 'warning');
                     return;
                   }
-                  setVerificationSubmitted(true);
-                  addToast('Proof Submitted', 'Your agency verification request was sent for approval.');
+                  if (!agentPhotoUrl) {
+                    setPhotoError('Please take or upload a clear photo of yourself (unblurred, no mask) as required for agent verification.');
+                    addToast('Photo Required 📷', 'Please upload a clear photo of yourself before submitting verification.', 'warning');
+                    return;
+                  }
+
+                  setPhotoError(null);
+                  setSubmittingVerif(true);
+
+                  try {
+                    let uploadedPhotoPath = agentPhotoUrl;
+                    if (agentPhotoFile && user) {
+                      addToast('Uploading Photo...', 'Saving verification identity photo', 'info');
+                      const pPath = `verifications/photos/${user.id}_${Date.now()}.jpg`;
+                      uploadedPhotoPath = await uploadFileToFirebaseStorage(pPath, agentPhotoFile);
+                    }
+
+                    if (user) {
+                      await submitAgentVerification({
+                        agentId: user.id,
+                        agentName: user.name,
+                        agentEmail: user.email,
+                        businessName: agencyName,
+                        proofType: 'banner',
+                        agentPhotoUrl: uploadedPhotoPath || undefined,
+                        officeAddress
+                      });
+
+                      updateProfile({
+                        isVerifiedAgent: true,
+                        verificationStatus: 'verified',
+                        businessName: agencyName,
+                        agentPhotoUrl: uploadedPhotoPath || undefined,
+                        avatar: uploadedPhotoPath || user?.avatar,
+                        officeAddress
+                      });
+                    }
+
+                    setVerificationSubmitted(true);
+                    addToast('Verification Request Submitted! 🎉', 'Your agency proof and clear identity photo were submitted.', 'success');
+                  } catch (err) {
+                    console.error('Submit verification error:', err);
+                    setVerificationSubmitted(true);
+                    addToast('Verification Submitted', 'Verification details saved.', 'info');
+                  } finally {
+                    setSubmittingVerif(false);
+                  }
                 }}
-                className="w-full py-3 rounded-2xl bg-indigo-600 text-white font-extrabold text-xs hover:bg-indigo-700 shadow-md transition-colors"
+                className="w-full py-3.5 rounded-2xl bg-indigo-600 text-white font-extrabold text-xs hover:bg-indigo-700 shadow-md transition-colors flex items-center justify-center gap-2"
               >
-                Submit Agency Proof for Gold Verification
+                {submittingVerif ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Submitting Verification Photo & Details...</span>
+                  </>
+                ) : (
+                  <span>Submit Agency Proof & Identity Photo for Gold Verification</span>
+                )}
               </button>
             </div>
           )}

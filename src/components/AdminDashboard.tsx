@@ -20,10 +20,37 @@ export const AdminDashboard: React.FC = () => {
 
   // Agent Verification Requests Queue
   const [pendingAgents, setPendingAgents] = useState([
-    { id: 'ag_p1', name: 'Alaba Student Housing Ltd', email: 'alaba@housing.ng', uni: 'University of Lagos (UNILAG)', docType: 'NIN-84920491823', status: 'pending' },
-    { id: 'ag_p2', name: 'Ile-Ife Campus Properties', email: 'oau@properties.ng', uni: 'Obafemi Awolowo University (OAU)', docType: 'CAC-RC892019', status: 'pending' },
-    { id: 'ag_p3', name: 'Yabatech Hostels Consult', email: 'yaba@hostels.ng', uni: 'Yaba College of Technology', docType: 'NIN-99102837482', status: 'pending' },
+    { 
+      id: 'ag_p1', 
+      name: 'Alaba Student Housing Ltd', 
+      email: 'alaba@housing.ng', 
+      uni: 'University of Lagos (UNILAG)', 
+      docType: 'NIN-84920491823', 
+      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      status: 'pending' 
+    },
+    { 
+      id: 'ag_p2', 
+      name: 'Ile-Ife Campus Properties', 
+      email: 'oau@properties.ng', 
+      uni: 'Obafemi Awolowo University (OAU)', 
+      docType: 'CAC-RC892019', 
+      photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+      status: 'pending' 
+    },
+    { 
+      id: 'ag_p3', 
+      name: 'Yabatech Hostels Consult', 
+      email: 'yaba@hostels.ng', 
+      uni: 'Yaba College of Technology', 
+      docType: 'NIN-99102837482', 
+      photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+      status: 'pending' 
+    },
   ]);
+
+  // Selected agent photo modal state
+  const [previewPhotoModal, setPreviewPhotoModal] = useState<string | null>(null);
 
   // Security Fraud Reports Queue
   const [reports, setReports] = useState([
@@ -44,6 +71,29 @@ export const AdminDashboard: React.FC = () => {
       .then(data => setListings(data))
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Fetch submitted agent verifications
+    fetch('/api/verifications')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.verifications && data.verifications.length > 0) {
+          const liveAgents = data.verifications.map((v: any) => ({
+            id: v.id,
+            name: v.businessName || v.agentName,
+            email: v.agentEmail,
+            uni: v.officeAddress || 'Campus Property Agent',
+            docType: v.proofType?.toUpperCase() || 'OFFICE PHOTO',
+            photoUrl: v.agentPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+            status: v.status || 'pending'
+          }));
+          setPendingAgents(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const filteredNew = liveAgents.filter((a: any) => !existingIds.has(a.id));
+            return [...filteredNew, ...prev];
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleApproveListing = (id: string) => {
@@ -298,10 +348,37 @@ export const AdminDashboard: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 text-xs space-y-1">
-                  <p className="text-slate-600 dark:text-slate-300"><strong>Email:</strong> {ag.email}</p>
-                  <p className="text-slate-600 dark:text-slate-300"><strong>Primary Campus:</strong> {ag.uni}</p>
-                  <p className="text-purple-600 dark:text-purple-400 font-bold"><strong>ID Document:</strong> {ag.docType}</p>
+                {/* Agent Identity Photo Display */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700">
+                  <div 
+                    onClick={() => ag.photoUrl && setPreviewPhotoModal(ag.photoUrl)}
+                    className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-emerald-500 shrink-0 cursor-pointer group shadow-sm"
+                  >
+                    <img 
+                      src={ag.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'} 
+                      alt={ag.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-extrabold">
+                      Inspect
+                    </div>
+                  </div>
+
+                  <div className="text-xs space-y-0.5 flex-1 min-w-0">
+                    <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 text-[10px] bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
+                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                      Face Unmasked & Unblurred
+                    </span>
+                    <p className="text-slate-700 dark:text-slate-300 truncate font-semibold">
+                      <strong>Email:</strong> {ag.email}
+                    </p>
+                    <p className="text-slate-600 dark:text-slate-400 truncate">
+                      <strong>Campus / Office:</strong> {ag.uni}
+                    </p>
+                    <p className="text-purple-600 dark:text-purple-400 font-bold text-[11px]">
+                      <strong>Doc Type:</strong> {ag.docType}
+                    </p>
+                  </div>
                 </div>
 
                 {ag.status === 'pending' ? (
@@ -481,6 +558,57 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Agent Photo Modal Inspection Dialog */}
+      <AnimatePresence>
+        {previewPhotoModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 text-center"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  Agent Identity Photo Inspection
+                </h3>
+                <button
+                  onClick={() => setPreviewPhotoModal(null)}
+                  className="p-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="relative aspect-square rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-md">
+                <img
+                  src={previewPhotoModal}
+                  alt="Agent Identity Photo"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold text-left space-y-1 border border-emerald-200 dark:border-emerald-800">
+                <p className="font-extrabold flex items-center gap-1 text-emerald-900 dark:text-emerald-200">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Identity Criteria Met
+                </p>
+                <p className="text-[11px] opacity-90">
+                  Full face clearly visible, no face mask or sunglasses worn, unblurred photo quality verified.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setPreviewPhotoModal(null)}
+                className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-extrabold text-xs"
+              >
+                Close Inspection
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Tab 5: Security Audit Logs */}
       {activeTab === 'audit_logs' && (

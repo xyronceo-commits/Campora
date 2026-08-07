@@ -105,7 +105,8 @@ const INITIAL_ACCOUNTS_PRESET: User[] = [
     phone: '+234 803 123 4567',
     isVerifiedAgent: true,
     verificationStatus: 'verified',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    agentPhotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
     createdAt: '2025-01-15T10:00:00Z',
   },
   {
@@ -410,13 +411,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = (updatedData: Partial<User>) => {
     if (!user) return;
+
+    // Synchronize agent photo with profile pic (avatar)
+    if (updatedData.agentPhotoUrl) {
+      updatedData.avatar = updatedData.agentPhotoUrl;
+    } else if ((user.isVerifiedAgent || user.agentPhotoUrl) && updatedData.avatar && updatedData.avatar !== user.agentPhotoUrl) {
+      // Prevent overriding verified identity avatar
+      updatedData.avatar = user.agentPhotoUrl || user.avatar;
+    }
+
     const updatedUser = { ...user, ...updatedData };
     setUser(updatedUser);
     setSavedAccounts(prev => prev.map(u => u.id === user.id ? updatedUser : u));
     
     // Also update in Firestore if user is logged in
     updateFirestoreUserProfile(user.id, updatedData).catch(() => {});
-    addToast('Profile Updated', 'Your profile details have been saved to Firestore successfully.');
+    addToast('Profile Updated', 'Your profile details have been saved successfully.');
   };
 
   const setRole = (newRole: UserRole) => {

@@ -55,6 +55,10 @@ export const UserProfileModal: React.FC = () => {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0] || !user) return;
+    if (user.isVerifiedAgent || user.agentPhotoUrl) {
+      addToast('Profile Photo Locked 🔒', 'Verified Agent profile picture is set from your identity verification photo and cannot be edited.', 'warning');
+      return;
+    }
     const file = e.target.files[0];
     setAvatarUploading(true);
     addToast('Uploading Avatar...', 'Saving avatar to Firebase Storage', 'info');
@@ -131,11 +135,22 @@ export const UserProfileModal: React.FC = () => {
             </button>
 
             <div className="flex items-center gap-4">
-              <img
-                src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
-                alt={user?.name || 'User'}
-                className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-400 shadow-md"
-              />
+              <div className="relative shrink-0">
+                <img
+                  src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
+                  alt={user?.name || 'User'}
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-400 shadow-md"
+                />
+                {(user?.isVerifiedAgent || user?.agentPhotoUrl) && (
+                  <div 
+                    className="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-amber-500 text-slate-950 rounded-md font-black text-[9px] shadow-md flex items-center gap-0.5 border border-slate-900 cursor-default"
+                    title="Verified Agent Profile Picture (Non-editable for Trust & Safety)"
+                  >
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>LOCKED</span>
+                  </div>
+                )}
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-extrabold text-lg text-white truncate">{user?.name || 'Guest User'}</h2>

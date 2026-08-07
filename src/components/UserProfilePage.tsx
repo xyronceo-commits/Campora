@@ -56,6 +56,10 @@ export const UserProfilePage: React.FC = () => {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0] || !user) return;
+    if (user.isVerifiedAgent || user.agentPhotoUrl) {
+      addToast('Profile Photo Locked 🔒', 'Verified Agent profile pictures are set from your identity photo and cannot be edited.', 'warning');
+      return;
+    }
     const file = e.target.files[0];
     setAvatarUploading(true);
     addToast('Uploading Avatar...', 'Saving avatar picture to Firebase Storage', 'info');
@@ -185,25 +189,35 @@ export const UserProfilePage: React.FC = () => {
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-4 border-emerald-400 shadow-2xl"
               />
               {user && (
-                <label 
-                  htmlFor="user-page-avatar-upload"
-                  className="absolute bottom-0 right-0 p-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold shadow-lg cursor-pointer transition-all hover:scale-105"
-                  title="Upload new profile avatar to Firebase"
-                >
-                  {avatarUploading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin text-slate-900" />
-                  ) : (
-                    <Camera className="w-4 h-4 text-slate-900" />
-                  )}
-                  <input
-                    id="user-page-avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    disabled={avatarUploading}
-                    className="hidden"
-                  />
-                </label>
+                (user.isVerifiedAgent || user.agentPhotoUrl) ? (
+                  <div 
+                    className="absolute -bottom-2.5 left-1/2 transform -translate-x-1/2 px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 font-black text-[10px] shadow-xl flex items-center gap-1 border-2 border-slate-900 shrink-0 whitespace-nowrap cursor-default"
+                    title="Verified Identity Photo (Non-editable for Trust & Security)"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-950" />
+                    <span>VERIFIED & LOCKED</span>
+                  </div>
+                ) : (
+                  <label 
+                    htmlFor="user-page-avatar-upload"
+                    className="absolute bottom-0 right-0 p-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold shadow-lg cursor-pointer transition-all hover:scale-105"
+                    title="Upload new profile avatar to Firebase"
+                  >
+                    {avatarUploading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin text-slate-900" />
+                    ) : (
+                      <Camera className="w-4 h-4 text-slate-900" />
+                    )}
+                    <input
+                      id="user-page-avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      disabled={avatarUploading}
+                      className="hidden"
+                    />
+                  </label>
+                )
               )}
             </div>
 

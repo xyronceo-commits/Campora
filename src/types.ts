@@ -15,6 +15,7 @@ export interface User {
   businessName?: string;
   proofType?: 'banner' | 'logo' | 'office_photo' | 'cac' | 'other';
   proofUrl?: string;
+  agentPhotoUrl?: string;
   officeAddress?: string;
   createdAt: string;
 }
@@ -27,6 +28,7 @@ export interface AgentVerification {
   businessName: string;
   proofType: 'banner' | 'logo' | 'office_photo' | 'cac' | 'other';
   proofUrl?: string;
+  agentPhotoUrl?: string;
   officeAddress?: string;
   status: 'pending' | 'verified' | 'rejected';
   submittedAt: string;
