@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, UserRole } from '../types';
 import { uploadFileToFirebaseStorage } from '../lib/firebase';
+import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { 
   User as UserIcon, UserCheck, LogOut, Trash2, Plus, ShieldCheck, UserPlus, 
   Mail, Phone, Building2, AlertTriangle, CheckCircle2, RefreshCw, KeyRound, 
@@ -35,6 +36,7 @@ export const UserProfilePage: React.FC = () => {
   const [editName, setEditName] = useState(user?.name || '');
   const [editEmail, setEditEmail] = useState(user?.email || '');
   const [editPhone, setEditPhone] = useState(user?.phone || '');
+  const [editUni, setEditUni] = useState(user?.universityName || '');
   const [avatarUploading, setAvatarUploading] = useState(false);
 
   // Delete Account Confirmation Modal State
@@ -84,7 +86,8 @@ export const UserProfilePage: React.FC = () => {
     updateProfile({
       name: editName.trim(),
       email: editEmail.trim(),
-      phone: editPhone.trim()
+      phone: editPhone.trim(),
+      universityName: editUni
     });
     setIsEditing(false);
     addToast('Profile Updated', 'Your profile details have been saved to Firestore.');
@@ -336,6 +339,7 @@ export const UserProfilePage: React.FC = () => {
                         setEditName(user.name);
                         setEditEmail(user.email);
                         setEditPhone(user.phone || '');
+                        setEditUni(user.universityName || '');
                       }
                       setIsEditing(!isEditing);
                     }}
@@ -400,6 +404,24 @@ export const UserProfilePage: React.FC = () => {
                       placeholder="+234 800 000 0000"
                       className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 font-medium focus:ring-2 focus:ring-emerald-500"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Primary Campus / University Choice
+                    </label>
+                    <select
+                      value={editUni}
+                      onChange={(e) => setEditUni(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 font-semibold focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">-- Select Your Preferred University --</option>
+                      {INITIAL_UNIVERSITIES.map(u => (
+                        <option key={u.id} value={u.name}>
+                          {u.name} ({u.shortName}) - {u.state} State
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="pt-2 flex gap-3">

@@ -83,6 +83,20 @@ export const AgentPhotoUploader: React.FC<AgentPhotoUploaderProps> = ({
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setCameraError("File size exceeds 5MB limit. Please upload a smaller image.");
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setCameraError("Invalid file type. Only JPG, PNG, and WEBP image files are allowed.");
+        return;
+      }
+
+      setCameraError(null);
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {

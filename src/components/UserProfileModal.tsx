@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, UserRole } from '../types';
 import { uploadFileToFirebaseStorage } from '../lib/firebase';
+import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { 
   X, UserCheck, LogOut, Trash2, Plus, ShieldCheck, UserPlus, 
   Mail, Phone, Building2, AlertTriangle, CheckCircle2, RefreshCw, KeyRound, User as UserIcon, ArrowRightLeft, Upload, Camera
@@ -40,6 +41,7 @@ export const UserProfileModal: React.FC = () => {
   const [editName, setEditName] = useState(user?.name || '');
   const [editEmail, setEditEmail] = useState(user?.email || '');
   const [editPhone, setEditPhone] = useState(user?.phone || '');
+  const [editUni, setEditUni] = useState(user?.universityName || '');
   const [avatarUploading, setAvatarUploading] = useState(false);
 
   // Delete Account Confirmation Modal State
@@ -83,7 +85,8 @@ export const UserProfileModal: React.FC = () => {
     updateProfile({
       name: editName.trim(),
       email: editEmail.trim(),
-      phone: editPhone.trim()
+      phone: editPhone.trim(),
+      universityName: editUni
     });
     setIsEditing(false);
     addToast('Profile Updated', 'Your profile details have been saved.');
@@ -225,6 +228,7 @@ export const UserProfileModal: React.FC = () => {
                           setEditName(user?.name || '');
                           setEditEmail(user?.email || '');
                           setEditPhone(user?.phone || '');
+                          setEditUni(user?.universityName || '');
                           setIsEditing(true);
                         }}
                         className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
@@ -249,6 +253,10 @@ export const UserProfileModal: React.FC = () => {
                       <div>
                         <span className="block text-[10px] uppercase font-bold text-slate-400">Account Type</span>
                         <span className="font-bold text-emerald-600 dark:text-emerald-400 capitalize">{user?.role || role}</span>
+                      </div>
+                      <div className="sm:col-span-2 border-t border-slate-200/60 dark:border-slate-700/60 pt-2">
+                        <span className="block text-[10px] uppercase font-bold text-slate-400">Primary Campus Choice</span>
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">{user?.universityName || 'Not specified'}</span>
                       </div>
                     </div>
                   </div>
@@ -286,6 +294,22 @@ export const UserProfileModal: React.FC = () => {
                           onChange={e => setEditPhone(e.target.value)}
                           className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 font-semibold text-slate-900 dark:text-slate-100"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">University of Choice</label>
+                        <select
+                          value={editUni}
+                          onChange={e => setEditUni(e.target.value)}
+                          className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 font-semibold text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option value="">-- Select Your University Choice --</option>
+                          {INITIAL_UNIVERSITIES.map(u => (
+                            <option key={u.id} value={u.name}>
+                              {u.name} ({u.shortName}) - {u.state} State
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
 

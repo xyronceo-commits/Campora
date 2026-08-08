@@ -368,11 +368,11 @@ export const AuthModal: React.FC = () => {
                   </div>
                 )}
 
-                {/* University Select for Student Signup */}
-                {authModalTab === 'student_signup' && (
+                {/* University Select for Student and Agent Signup */}
+                {(authModalTab === 'student_signup' || authModalTab === 'agent_signup') && (
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Select Primary Campus
+                      Primary Campus / University Choice
                     </label>
                     <div className="relative">
                       <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -382,7 +382,7 @@ export const AuthModal: React.FC = () => {
                         className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-indigo-500"
                       >
                         {INITIAL_UNIVERSITIES.map(u => (
-                          <option key={u.id} value={u.id}>{u.name} ({u.shortName})</option>
+                          <option key={u.id} value={u.id}>{u.name} ({u.shortName}) - {u.state} State</option>
                         ))}
                       </select>
                     </div>

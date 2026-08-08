@@ -304,7 +304,14 @@ export const ListingDetailModal: React.FC = () => {
                 {/* Price & Location Banner */}
                 <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Annual Rent</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rent Price</span>
+                      {selectedListing.salesInformation?.saleType && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/30">
+                          {selectedListing.salesInformation.saleType.replace('_', ' ')}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                       <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                         {selectedListing.currency}{formattedPrice}
@@ -313,8 +320,21 @@ export const ListingDetailModal: React.FC = () => {
                         / {selectedListing.pricePeriod}
                       </span>
                     </div>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> {selectedListing.availableRooms} of {selectedListing.totalRooms} rooms available
+
+                    <p className="text-xs font-semibold mt-1 flex items-center gap-1">
+                      {selectedListing.unitStatus === 'under_renovation' ? (
+                        <span className="text-amber-600 dark:text-amber-400 font-extrabold">
+                          🛠️ Under Renovation Mode
+                        </span>
+                      ) : selectedListing.unitStatus === 'occupied' || selectedListing.isOccupied ? (
+                        <span className="text-rose-600 dark:text-rose-400 font-extrabold">
+                          🔴 Fully Occupied / Rented Out
+                        </span>
+                      ) : (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" /> {selectedListing.availableRooms ?? selectedListing.totalRooms} of {selectedListing.totalRooms} rooms available
+                        </span>
+                      )}
                     </p>
                   </div>
 
@@ -329,6 +349,78 @@ export const ListingDetailModal: React.FC = () => {
                     </span>
                   </div>
                 </div>
+
+                {/* Renovation Notice Box if under renovation */}
+                {(selectedListing.unitStatus === 'under_renovation' || selectedListing.renovationNotes) && (
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs space-y-1.5">
+                    <h4 className="font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-2 text-xs">
+                      <span>🛠️ Renovation / Upgrade Notice</span>
+                    </h4>
+                    <p className="font-medium text-slate-700 dark:text-slate-300">
+                      {selectedListing.renovationNotes || 'Property undergoing minor upgrades and interior touch-ups for upcoming term.'}
+                    </p>
+                    {selectedListing.renovationExpectedCompletion && (
+                      <p className="font-extrabold text-amber-800 dark:text-amber-400 text-[11px]">
+                        📅 Expected Completion: {selectedListing.renovationExpectedCompletion}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Sales & Additional Fees Breakdown */}
+                {selectedListing.salesInformation && (
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-3">
+                    <h4 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs flex items-center justify-between">
+                      <span>Mandatory Rental Fees Breakdown</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Transparent Pricing</span>
+                    </h4>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      {selectedListing.salesInformation.cautionDeposit ? (
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                          <span className="block text-[10px] text-slate-400 font-bold">Caution Deposit</span>
+                          <span className="font-extrabold text-slate-900 dark:text-slate-100">
+                            ₦{new Intl.NumberFormat().format(selectedListing.salesInformation.cautionDeposit)}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {selectedListing.salesInformation.agencyFee ? (
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                          <span className="block text-[10px] text-slate-400 font-bold">Agency Fee</span>
+                          <span className="font-extrabold text-slate-900 dark:text-slate-100">
+                            ₦{new Intl.NumberFormat().format(selectedListing.salesInformation.agencyFee)}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {selectedListing.salesInformation.legalFee ? (
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                          <span className="block text-[10px] text-slate-400 font-bold">Legal Fee</span>
+                          <span className="font-extrabold text-slate-900 dark:text-slate-100">
+                            ₦{new Intl.NumberFormat().format(selectedListing.salesInformation.legalFee)}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {selectedListing.salesInformation.serviceCharge ? (
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                          <span className="block text-[10px] text-slate-400 font-bold">Service Charge</span>
+                          <span className="font-extrabold text-slate-900 dark:text-slate-100">
+                            ₦{new Intl.NumberFormat().format(selectedListing.salesInformation.serviceCharge)}
+                          </span>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {selectedListing.salesInformation.paymentTerms && (
+                      <div className="pt-2 text-xs border-t border-slate-100 dark:border-slate-700">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">Payment Terms: </span>
+                        <span className="text-slate-500 dark:text-slate-400">{selectedListing.salesInformation.paymentTerms}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Description */}
                 <div>

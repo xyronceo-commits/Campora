@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { 
   User as UserIcon, LogOut, Trash2, Plus, Check, ShieldCheck, Mail, Phone, 
   GraduationCap, Building2, Shield, AlertTriangle, Key, RefreshCw, X, UserPlus,
@@ -183,14 +184,19 @@ export const UserProfileSection: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Institution / Campus</label>
-                    <input
-                      type="text"
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">University / Primary Campus Choice</label>
+                    <select
                       value={editUni}
                       onChange={e => setEditUni(e.target.value)}
-                      placeholder="e.g. University of Lagos (UNILAG)"
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold"
-                    />
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">-- Select Your University Choice --</option>
+                      {INITIAL_UNIVERSITIES.map(u => (
+                        <option key={u.id} value={u.name}>
+                          {u.name} ({u.shortName}) - {u.state} State
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

@@ -423,7 +423,7 @@ export const AiChatbot: React.FC = () => {
         {
           id: `bot_${Date.now()}`,
           sender: 'bot',
-          text: 'Sorry, I ran into an error connecting to Gemini. Please try again.',
+          text: 'Sorry, I ran into an error connecting to Campora AI. Please try again.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
       ]);

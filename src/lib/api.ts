@@ -120,6 +120,26 @@ export async function createListing(listingData: Partial<Listing>): Promise<List
   }
 }
 
+export async function updateListing(id: string, updates: Partial<Listing>): Promise<Listing> {
+  updateListingInFirestore(id, updates).catch((err) => {
+    console.warn('Firestore update warning:', err);
+  });
+
+  try {
+    const res = await fetch(`/api/listings/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    if (!res.ok) throw new Error('Failed to update listing');
+    const data = await res.json();
+    return data.listing;
+  } catch (err) {
+    console.error('API update listing error', err);
+    throw err;
+  }
+}
+
 export async function updateListingStatus(id: string, updates: { isPaused?: boolean; isOccupied?: boolean; status?: 'active' | 'pending_approval' | 'flagged' | 'paused' }): Promise<Listing> {
   updateListingInFirestore(id, updates).catch(() => {});
 

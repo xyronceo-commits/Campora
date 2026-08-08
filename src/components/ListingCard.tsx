@@ -184,9 +184,21 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
                 / {listing.pricePeriod}
               </span>
             </div>
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-              <Check className="w-3 h-3" />
-              {listing.availableRooms} {listing.availableRooms === 1 ? 'room' : 'rooms'} available
+            <p className="text-[11px] font-semibold flex items-center gap-1">
+              {listing.unitStatus === 'under_renovation' ? (
+                <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1 font-extrabold">
+                  🛠️ Under Renovation
+                </span>
+              ) : listing.unitStatus === 'occupied' || listing.isOccupied ? (
+                <span className="text-rose-600 dark:text-rose-400 font-extrabold">
+                  🔴 Fully Occupied
+                </span>
+              ) : (
+                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <Check className="w-3 h-3" />
+                  {listing.availableRooms ?? listing.totalRooms} {listing.availableRooms === 1 ? 'room' : 'rooms'} available
+                </span>
+              )}
             </p>
           </div>
 

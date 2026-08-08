@@ -94,6 +94,35 @@ export interface ListingRatings {
   count: number;
 }
 
+export type UnitStatus = 'vacant' | 'partially_occupied' | 'occupied' | 'under_renovation';
+
+export interface SalesInformation {
+  saleType?: 'for_rent' | 'for_lease' | 'sold_out' | 'discounted' | 'installment_available';
+  originalPrice?: number;
+  discountedPrice?: number;
+  cautionDeposit?: number;
+  agencyFee?: number;
+  legalFee?: number;
+  serviceCharge?: number;
+  paymentTerms?: string;
+  salesContactPhone?: string;
+  salesContactWhatsapp?: string;
+  salesNotes?: string;
+  totalUnitsSoldRented?: number;
+  totalRevenueGenerated?: number;
+}
+
+export interface SaleRecord {
+  id: string;
+  listingId: string;
+  tenantName: string;
+  tenantPhone?: string;
+  unitNumber?: string;
+  amountPaid: number;
+  date: string;
+  notes?: string;
+}
+
 export interface Listing {
   id: string;
   title: string;
@@ -127,6 +156,12 @@ export interface Listing {
   isFeatured: boolean;
   isPaused: boolean;
   isOccupied: boolean;
+  unitStatus?: UnitStatus;
+  occupiedRooms?: number;
+  renovationNotes?: string;
+  renovationExpectedCompletion?: string;
+  salesInformation?: SalesInformation;
+  salesHistory?: SaleRecord[];
   status: 'active' | 'approved' | 'pending_review' | 'pending_approval' | 'rejected' | 'flagged' | 'paused';
   viewsCount: number;
   enquiriesCount: number;

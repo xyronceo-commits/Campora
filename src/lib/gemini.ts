@@ -19,6 +19,28 @@ export async function searchAccommodationWithAi(prompt: string): Promise<AiSearc
   }
 }
 
+export function cleanBotReply(text: string): string {
+  if (!text) return '';
+  let cleaned = text;
+
+  // 1. Remove <think>...</think> blocks
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  // 2. Remove unclosed <think>... blocks
+  cleaned = cleaned.replace(/<think>[\s\S]*/gi, '');
+
+  // 3. Remove <thinking>...</thinking> or <thought>...</thought> or <reasoning>...
+  cleaned = cleaned.replace(/<(thinking|thought|reasoning)>[\s\S]*?<\/(thinking|thought|reasoning)>/gi, '');
+  cleaned = cleaned.replace(/<(thinking|thought|reasoning)>[\s\S]*/gi, '');
+
+  // 4. Remove leading thinking headers
+  cleaned = cleaned.replace(/^(Thinking Process|Thought Process|Thought|Reasoning|Chain of Thought):\s*[\s\S]*?\n\n/gi, '');
+
+  // 5. Remove any echoed input / context headers
+  cleaned = cleaned.replace(/^(System Instruction|User Query|User|Context|Input|Prompt):\s*.*?\n/gi, '');
+
+  return cleaned.trim();
+}
+
 export async function chatWithCamporaBot(message: string, history?: any[]): Promise<string> {
   try {
     const res = await fetch('/api/gemini/chat', {
@@ -28,7 +50,7 @@ export async function chatWithCamporaBot(message: string, history?: any[]): Prom
     });
     if (!res.ok) throw new Error('Chatbot error');
     const data = await res.json();
-    return data.reply;
+    return cleanBotReply(data.reply || '');
   } catch (err) {
     console.warn('AI chat error', err);
     return 'Hello! I am Campora AI Assistant. You can search hostels, schedule physical inspections, or contact verified agents safely through Campora!';
